@@ -433,7 +433,7 @@ global {
 			do die;
 		}
 		
-		road_network_custom[list<int>([])] <- (as_edge_graph(road) use_cache false) with_optimizer_type "NBAStar";
+		road_network_custom[list<int>([])] <- (as_edge_graph(road) use_cache false) with_shortest_path_algorithm #NBAStar;
 		current_weights <- road as_map (each::each.shape.perimeter);
 
 		//	create people from: population_shape_file; 
@@ -551,7 +551,7 @@ global {
 	
 	
 	if scen {
-		 map input_values <-user_input("Quel scénario voulez vous simuler ? ",[choose("Scénario",string,"statu quo",["statu quo","population informée","rivière élargie"]),choose("Alea",string,"moyen",["petit","moyen","fort"])]);
+		 map input_values <-user_input_dialog("Quel scénario voulez vous simuler ? ",[choose("Scénario",string,"statu quo",["statu quo","population informée","rivière élargie"]),choose("Alea",string,"moyen",["petit","moyen","fort"])]);
 		 alea<-(input_values at "Alea");
 		 scenario<-(input_values at "Scénario");
 		 
@@ -1480,7 +1480,7 @@ species people skills: [moving] control: simple_bdi {
 					return_home <- true;
 				} else {
 					if (return_home) {
-						do remove_belief(vulnerable_car);
+						do remove_belief(vulnerable_car); 
 						do remove_intention(protect_car, true);
 						return_home <- false;
 					} else {
@@ -1515,7 +1515,7 @@ species people skills: [moving] control: simple_bdi {
 					current_path <- nil;
 					current_edge <- nil;
 					if not (known_blocked_roads in road_network_custom.keys) {
-						graph a_graph <- (as_edge_graph(road - known_blocked_roads) use_cache false) with_optimizer_type "NBAStar";
+						graph a_graph <- (as_edge_graph(road - known_blocked_roads) use_cache false) with_shortest_path_algorithm #NBAStar;
 						road_network_custom[known_blocked_roads] <- a_graph;
 						current_graph <- a_graph;
 					} 
