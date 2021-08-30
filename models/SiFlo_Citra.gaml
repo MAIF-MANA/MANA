@@ -22,9 +22,10 @@ global {
 	shape_file res_buildings_shape_file <- shape_file("../results/residential_building.shp");
 	shape_file market_shape_file <- shape_file("../results/market.shp");
 	shape_file erp_shape_file <- shape_file("../results/erp.shp");
-	shape_file main_roads_shape_file <- shape_file("../results/main_road.shp");
+	/*shape_file main_roads_shape_file <- shape_file("../results/main_road.shp");
 	shape_file city_roads_shape_file <- shape_file("../results/city_roads_separees.shp");
-	shape_file highway_shape_file <- shape_file("../results/highway.shp");
+	shape_file highway_shape_file <- shape_file("../results/highway.shp");*/
+	shape_file roads_shape_file <- shape_file("../results/roads.shp");
 	shape_file waterways_shape_file <- shape_file("../results/river.shp");
 	shape_file green_shape_file <- shape_file("../results/green_area.shp");
 	shape_file sea_shape_file <- shape_file("../results/sea.shp");
@@ -118,6 +119,7 @@ global {
 	float rain_intensity_test<-1.04 #cm;
 	float water_input_test<-5*10^7#m3/#h;
 
+	list<rgb> color_category <- [ #darkgrey, #gold];
 	
 	map<people,string> injured_how;
 	map<people,string> dead_how;
@@ -292,30 +294,15 @@ global {
 		}
 		
 		 
-		create road from: city_roads_shape_file {
-			category<-0;
-			color<-#darkgrey;
+		create road from: roads_shape_file{
+			color<-color_category[category];
 			if not (self overlaps world) {
 				do die;
 			}
 		}
 
 
-	create road from:split_lines(main_roads_shape_file.contents) {
-			category<-1;
-			color<-#gold;
-			if not (self overlaps world) {
-				do die;
-			}
-		}
-		/* 	create road from: highway_shape_file {
-			category<-2;
-			color<-#red;
-			if not (self overlaps world) {
-				do die;
-			}
-		}
-		 */
+	
 		
 			create spe_riv from: bridge_shape_file {
 				category<-0;

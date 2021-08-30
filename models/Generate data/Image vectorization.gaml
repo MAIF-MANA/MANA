@@ -28,23 +28,18 @@ global {
 	 * Import the image to vectorize
 	 */
 
-//	image_file image_spec_riv<- image_file("../CityMap/spe_riv.png");
-	
-	image_file image_autoroute<- image_file("../CityMap/autoroute_route-nationale_4.png");
-	image_file image_route<- image_file("../CityMap/autres_routes_4.png");
-	image_file image_batiments_river<- image_file("../CityMap/batiments_vallat_4.png");
-	image_file image_vert<- image_file("../CityMap/espaces_naturels_mer_4.png");
-	image_file image_mnt <- image_file("../CityMap/MNT_4.png");
+	image_file image_autoroute<- image_file("../../CityMap/autoroute_route-nationale_4.png");
+	image_file image_route<- image_file("../../CityMap/autres_routes_4.png");
+	image_file image_batiments_river<- image_file("../../CityMap/batiments_vallat_4.png");
+	image_file image_vert<- image_file("../../CityMap/espaces_naturels_mer_4.png");
+	image_file image_mnt <- image_file("../../CityMap/MNT_4.png");
 
 	
-	//bool spe_riv<-true;
 	bool zone_verte<-true;
 	bool batiment_riv<-true;
 	bool mnt<-true;
 	bool route<-false;
 	
-//	int res_x <- matrix(image_spec_riv).columns;
-//	int res_y <- matrix(image_spec_riv).rows;
 	int res_x <- matrix(image_autoroute).columns;
 	int res_y <- matrix(image_autoroute).rows;
 	
@@ -71,32 +66,7 @@ global {
 		
 				//***************** cherche le mnts************************
 	
-	/* 
-		ask cell {		
-			if (mnt) {
-				rgb col <- rgb( (image_mnt) at {grid_x ,grid_y }) ;
-				altitude<-(255*3-(col.red+col.green+col.blue))/altitude_color_factor;
-				color_per_type["mnt"] <- col;
-			}
-			if zone_verte {
-				rgb col <- rgb( (image_vert) at {grid_x ,grid_y }) ;
-				color_per_type["nature"] <- col;
-			}
-			if batiment_riv {
-				rgb col <- rgb( (image_batiments_river) at {grid_x ,grid_y }) ;
-				color_per_type["batiment"] <- col;
-			}
-			if route {
-				rgb col <- rgb( (image_route) at {grid_x ,grid_y }) ;
-				color_per_type["route"] <- col;
-				col <- rgb( (image_autoroute) at {grid_x ,grid_y }) ;
-				color_per_type["autoroute"] <- col;
-			}
-			
-			
-		}
-		*/	
-		write "color retrieved";
+	
 	
 		if (mnt) {
 			using topology(world) {
@@ -277,8 +247,6 @@ experiment Vectorize type: gui {
 	output {
 		
 		display map_vector type:opengl{
-			
-			
 			grid cell_mnt;
 			species green_area ;
 			species river;
@@ -289,13 +257,6 @@ experiment Vectorize type: gui {
 			species erp;
 			species market;
 			species sea;
-			
-			
 		}
-	 	/*display image {
-		//	image image_truc;
-		//	image image_mnt;
-		//image image_ville;
-		}*/
 	}
 }
