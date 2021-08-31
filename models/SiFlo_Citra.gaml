@@ -176,21 +176,80 @@ global {
 	
 	list<road> not_usable_roads update: [];
 	
+	bool parallel_computation <- true;
+	bool verbose <- true;
+	
 	//emotion
 	emotion fear <- new_emotion("fear");
 	
 	
-	//***************************  INIT **********************************************************************
+	
+		//***************************  INIT **********************************************************************
 	init {
 		step <-  time_step; 
 		ratio_received_water <- 1.0;
 		
-		
-		
-		
+		do create_buildings_roads;
+		if verbose {write "Building and roads created: " + length(building);}
 		create institution;
+	
+		//do load_parameters;
 		
-	 	 
+		do create_natural_environment;
+		
+		
+		if verbose {write "Natural environment created";}
+		ask cell {
+			do update_color;
+			cell_area<-shape.area;
+		}
+		
+		
+		do create_spe_riv;
+		
+		
+		if verbose {write "Spe Riv created";}
+		
+		data_flood <- matrix(my_data_flood_file);
+		data_rain <- matrix(my_data_rain_file);
+		river_origin <- (river with_min_of (each.location.x));
+		river_ending <- (river with_max_of (each.location.x));
+	
+		do init_cells_and_bd_select;
+	
+	
+		if verbose {write "Data loaded and cell initiliazed";}	
+		//safe_roads <- road where empty(active_cells overlapping each);
+		safe_roads <-road where (each.category=0);
+		// where ((each distance_to rivers) > 100#m );
+		//empty(active_cells overlapping each);
+		
+		road_network_custom[list<int>([])] <- (as_edge_graph(road) use_cache false) with_shortest_path_algorithm #NBAStar;
+		current_weights <- road as_map (each::each.shape.perimeter);
+
+		//	create people from: population_shape_file; 
+	//	write length(building where (each.category=0));
+		
+		
+		if verbose {write "Road network computed";}	
+		
+		
+		
+		do create_people;
+		
+		
+		repeat_time<-round(max_speed *step/sqrt(cell_area));
+	
+		do manage_scenario;
+	
+		if verbose {write "Scenario initialized";}	
+		
+	
+	
+	}
+	
+	
+	action create_buildings_roads {
 		create building from: res_buildings_shape_file {
 			category<-0;
 			if not (self overlaps world) {
@@ -208,17 +267,40 @@ global {
 
 		}
 		
-			create building from: erp_shape_file {
+		create building from: erp_shape_file {
 			category<-2;
 			if not (self overlaps world) {
 				do die;
 			}
 
 		}
+		ask building parallel: parallel_computation{
+			my_cells <- cell overlapping self;
+			ask my_cells {
+				add myself to: my_buildings;
+				myself.my_neighbour_cells <- (myself.my_neighbour_cells + neighbors);
+
+			}
+			if category=0 {my_color <- #grey;}
+			if category=1 {my_color <- #yellow;}
+			if category=2 {my_color <- #violet;}
+			my_neighbour_cells <- remove_duplicates(my_neighbour_cells);
+			altitude <- (my_cells mean_of (each.grid_value));
+			my_location <- location + point(0, 0, altitude + 1 #m);
+		}
+		create road from: roads_shape_file{
+			color<-color_category[category];
+			if not (self overlaps world) {
+				do die;
+			}
+			my_cells <- cell overlapping self;
+		}
+		
 		 
-		 
-		 
-			create green_area from: green_shape_file {
+	}
+	
+	action create_natural_environment{
+		create green_area from: green_shape_file {
 			if not (self overlaps world) {
 				do die;
 			}
@@ -228,17 +310,6 @@ global {
 				
 			}
 		}
-		
-
-		create institution;
-	
-		//do load_parameters;
-		
-			
-			
-			
-			
-						
 		create sea from: sea_shape_file {
 			if not (self overlaps world) {
 				do die;
@@ -251,9 +322,6 @@ global {
 		}
 			
 		create river from:split_lines(waterways_shape_file.contents) {
-	
-	
-			
 			if not (self overlaps world) {
 				do die;
 			}
@@ -267,44 +335,30 @@ global {
 						river_broad <- river_broad_maint;
 						river_depth <- river_depth_maint;}
 				}
-		/* 	ask canal {
-				coeff_enter_canal<-canal_deb_init;
+	
 			}
-			
-				if canal_maintenance {
-					ask canal {
-					coeff_enter_canal<-canal_deb_maint;
-				}
-			
-			}*/
-			}
-			
-			
-			
 			my_cells <- cell overlapping self;
 			ask my_cells {
 				add myself to: my_rivers;
 				add self to:river_cells;
 			}
-
-		}
-
-		ask cell {do update_color;
-			cell_area<-shape.area;
-		}
-		
-		 
-		create road from: roads_shape_file{
-			color<-color_category[category];
-			if not (self overlaps world) {
-				do die;
+			
+			altitude <- (my_cells mean_of (each.grid_value));
+			my_location <- location + point(0, 0, altitude + 1 #m);
+			cell_origin <- (my_cells with_max_of (each.grid_value));
+			cell_destination <- (my_cells with_min_of (each.grid_value));
+			river_length <- shape.perimeter;
+			ask my_cells {
+				water_height <- myself.river_height;
+				is_river <- true;
 			}
+
 		}
-
-
-	
 		
-			create spe_riv from: bridge_shape_file {
+	}
+	
+	action create_spe_riv {
+		create spe_riv from: bridge_shape_file {
 				category<-0;
 				list<cell> cell_impacted;
 				cell_impacted<-cell where (each.is_river);
@@ -325,82 +379,24 @@ global {
 					river_depth<-river_depth/2;
 					river_broad<-river_broad/1.5;
 			}
-			}
-
-
-
-		data_flood <- matrix(my_data_flood_file);
-		data_rain <- matrix(my_data_rain_file);
-		river_origin <- (river with_min_of (each.location.x));
-		river_ending <- (river with_max_of (each.location.x));
-		ask river {
-			altitude <- (my_cells mean_of (each.grid_value));
-			my_location <- location + point(0, 0, altitude + 1 #m);
-			cell_origin <- (my_cells with_max_of (each.grid_value));
-			cell_destination <- (my_cells with_min_of (each.grid_value));
-			river_length <- shape.perimeter;
-			ask my_cells {
-				water_height <- myself.river_height;
-				is_river <- true;
-			}
-
 		}
-
-		ask building {
-			my_cells <- cell overlapping self;
-			ask my_cells {
-				add myself to: my_buildings;
-				myself.my_neighbour_cells <- (myself.my_neighbour_cells + neighbors);
-
-			}
-		if category=0 {my_color <- #grey;}
-		if category=1 {my_color <- #yellow;}
-		if category=2 {my_color <- #violet;}
-			my_neighbour_cells <- remove_duplicates(my_neighbour_cells);
-			altitude <- (my_cells mean_of (each.grid_value));
-			my_location <- location + point(0, 0, altitude + 1 #m);
-		}
-
-		ask road {
-			my_cells <- cell overlapping self;
-		}
-
-		ask cell {
+	}
+	
+	action init_cells_and_bd_select {
+		ask cell parallel: parallel_computation {
 			if grid_value < 0 {
 				is_sea <- true;
-			}
-			
-			//slope<-max([0,(altitude-(neighbors min_of(each.altitude)))/sqrt(cell_area)]);
-			 
+			} 
 			my_buildings <- remove_duplicates(my_buildings);
 			escape_cell <- false;
 			if grid_x < 10 {
 				escape_cell <- true;
 			}
-			
-			
-			 
-			
 		}
-
+		
+		
 		escape_cells <- cell where each.escape_cell;
-	/*	ask river_ending {
-		 	create canal {
-				self.canal_cell_origin <- myself.cell_destination;
-				self.canal_cell_destination<-(cell where each.is_sea) closest_to  myself.cell_destination;
-				shape <- polyline([canal_cell_origin.location, canal_cell_destination.location]);
-				my_cells <- cell overlapping self;
-				ask my_cells {
-					is_canal <- true;
-					if (self=myself.canal_cell_origin) {
-						is_canal_origin<-true;
-					}
-					
-				}
-
-			}
-
-		}*/
+	
 
 		geometry rivers <- union(river collect each.shape);
 		//geometry canals <- union(canal collect each.shape);
@@ -412,21 +408,22 @@ global {
 			}
 
 		}
-		//safe_roads <- road where empty(active_cells overlapping each);
-		safe_roads <-road where (each.category=0);
-		// where ((each distance_to rivers) > 100#m );
-		//empty(active_cells overlapping each);
 		ask building where ((each distance_to rivers) > max_distance_to_river ) {
 			do die;
 		}
 		
-		road_network_custom[list<int>([])] <- (as_edge_graph(road) use_cache false) with_shortest_path_algorithm #NBAStar;
-		current_weights <- road as_map (each::each.shape.perimeter);
-
-		//	create people from: population_shape_file; 
-	//	write length(building where (each.category=0));
 		
+		float prev_alt<-500#m;
+		loop riv over:river_cells sort_by (each.location.x){
+				riv.river_broad<-1#m;
+				riv.river_depth<-min([riv.altitude,max([2#m,riv.altitude-(prev_alt-0.1#m)])]);
+				riv.river_altitude<-riv.altitude-riv.river_depth;
+				prev_alt<-riv.river_altitude;
+		}
 		
+	}
+	
+	action create_people {
 		ask building where (each.category=0) {
 			float it_max<-shape.area/50;
 			int it<-0;
@@ -442,8 +439,8 @@ global {
 			
 			}
 		
-		//write length(people);
-	ask people {
+		
+		ask people parallel: parallel_computation{
 			know_rules <- flip(one_of(institution).DICRIM_information);
 			do add_desire(life_not_at_stake, 1.0);
 			do add_desire(do_nothing, strength_do_nothing);
@@ -479,16 +476,19 @@ global {
 					myself.my_car <- self;
 					location <- myself.location;
 					float dist <- 100 #m;
-					list<road> roads_neigh <- (road at_distance dist);
-					loop while: empty(roads_neigh) {
-						dist <- dist + 50;
-						roads_neigh <- (road at_distance dist);
-					}
-
-					road a_road <- roads_neigh[rnd_choice(roads_neigh collect each.shape.perimeter)];
-					location <- any_location_in(a_road);
+					using topology(world) {
+						list<road> roads_neigh <- (road at_distance dist);
+						loop while: empty(roads_neigh) {
+							dist <- dist + 50;
+							roads_neigh <- (road at_distance dist);
+						}
+						
+						road a_road <- roads_neigh[rnd_choice(roads_neigh collect each.shape.perimeter)];
+						location <- any_location_in(a_road);
+						
+						my_owner.heading <- first(a_road.shape.points) towards last(a_road.shape.points);
 					
-					my_owner.heading <- first(a_road.shape.points) towards last(a_road.shape.points);
+						}
 				}
 				if (cell(my_car.location) in active_cells) {
 					do add_belief(vulnerable_car);
@@ -505,58 +505,53 @@ global {
 			do add_belief(energy_is_on);
 			do add_belief(evacuation_is_possible);
 		
-		} 
+		}
 		nb_waiting <- length(people);
  		nb_people_begin<- length(people);
+		if verbose {write "People created: " + nb_people_begin;}	
 		
+		list<people> to_inform <- people where (each.friends_to_inform_to_select > 0);
 		ask people {
-			friends_to_inform <- round(max_number_to_inform * extroversion) among ((people - self) where (each.friends_to_inform_to_select > 0));
-			loop f over: friends_to_inform {
-				float appreciation <- rnd(0.0,1.0);
-				float solidarity <- rnd(0.0,1.0);
-				social_link relation <- new_social_link(f, appreciation, 0.0, solidarity, 0.0);
-				do add_social_link(relation );
-				ask f {
-					friends_to_inform_to_select <- friends_to_inform_to_select - 1;
-					do add_social_link(new_social_link(myself,rnd(0.0, 1.0), 0.0, rnd(0.0, 1.0),0.0));
+			if (friends_to_inform_to_select > 0) {
+				friends_to_inform <- round(max_number_to_inform * extroversion) among to_inform;
+				loop f over: friends_to_inform {
+					float appreciation <- rnd(0.0,1.0);
+					float solidarity <- rnd(0.0,1.0);
+					social_link relation <- new_social_link(f, appreciation, 0.0, solidarity, 0.0);
+					do add_social_link(relation );
+					ask f {
+						friends_to_inform_to_select <- friends_to_inform_to_select - 1;
+						do add_social_link(new_social_link(myself,rnd(0.0, 1.0), 0.0, rnd(0.0, 1.0),0.0));
+					}
+						
 				}
+				to_inform <- to_inform - (friends_to_inform where (each.friends_to_inform_to_select = 0));
 			}
 		} 
+		if verbose {write "People network generated";}	
 		
-		float prev_alt<-500#m;
-		loop riv over:river_cells sort_by (each.location.x){
-				riv.river_broad<-1#m;
-				riv.river_depth<-min([riv.altitude,max([2#m,riv.altitude-(prev_alt-0.1#m)])]);
-				riv.river_altitude<-riv.altitude-riv.river_depth;
-				prev_alt<-riv.river_altitude;
-		}
-		
-		
-		
-	repeat_time<-round(max_speed *step/sqrt(cell_area));
-	
-	
-	
-	if scen {
-		 map input_values <-user_input_dialog("Quel scénario voulez vous simuler ? ",[choose("Scénario",string,"statu quo",["statu quo","population informée","rivière élargie"]),choose("Alea",string,"moyen",["petit","moyen","fort"])]);
-		 alea<-(input_values at "Alea");
-		 scenario<-(input_values at "Scénario");
-		 
-		 rain<-false;
-	 	 water_input<-true;
-		 water_test<-true;
-
-	if alea="petit" {water_input_test<-1*10^6#m3/#h;	}
-	if alea="moyen" {water_input_test<-1*10^7#m3/#h;	}
-	if alea="fort" {water_input_test<-1*10^8#m3/#h;	}
-	
-	
-	if scenario="statu quo" {}
-	if scenario="population informée" {ask institution {DICRIM_information<-1.0;}	}
-	if scenario="rivière élargie" {ask cell where (each.is_river) {river_broad<-river_broad+2#m;}	}
-
 	}
 	
+	action manage_scenario {
+		if scen {
+			 map input_values <-user_input_dialog("Quel scénario voulez vous simuler ? ",[choose("Scénario",string,"statu quo",["statu quo","population informée","rivière élargie"]),choose("Alea",string,"moyen",["petit","moyen","fort"])]);
+			 alea<-(input_values at "Alea");
+			 scenario<-(input_values at "Scénario");
+			 
+			 rain<-false;
+		 	 water_input<-true;
+			 water_test<-true;
+	
+			if alea="petit" {water_input_test<-1*10^6#m3/#h;	}
+			if alea="moyen" {water_input_test<-1*10^7#m3/#h;	}
+			if alea="fort" {water_input_test<-1*10^8#m3/#h;	}
+			
+			
+			if scenario="statu quo" {}
+			if scenario="population informée" {ask institution {DICRIM_information<-1.0;}	}
+			if scenario="rivière élargie" {ask cell where (each.is_river) {river_broad<-river_broad+2#m;}	}
+	
+		}
 	}
 	
 //***************************  END of INIT     **********************************************************************
