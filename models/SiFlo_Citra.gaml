@@ -625,7 +625,8 @@ global {
 		
 		save results to: "results_" + type_explo+ "_" + scenario+".csv" type:text rewrite: false;
 */		
-		if (increment = data_flood.rows or increment = data_rain.rows) {
+		//if (increment = data_flood.rows or increment = data_rain.rows) {
+		if (time=1#h) {
 			nb_flooded_cell<-length(flooded_cell);
 			write ("*************************");
 		//	write ("scenario : "+scenario);
