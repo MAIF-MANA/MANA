@@ -16,7 +16,7 @@ global {
 //***************************  VARIABLES **********************************************************************
 
 //	file mnt_file <- grid_file("../includes/LCred4.asc");
-	file mnt_file <- grid_file("../results/grid.asc");
+	file mnt_file <- grid_file("../results/grid2.asc");
 	file my_data_flood_file <- csv_file("../includes/data_flood3.csv", ",");
 	file my_data_rain_file <- csv_file("../includes/data_rain.csv", ",");
 	shape_file res_buildings_shape_file <- shape_file("../results/residential_building.shp");
@@ -116,6 +116,7 @@ global {
 	bool water_input<-true;
 	bool water_test<-false;
 	bool scen<-true;
+	bool only_flood<-true;
 	float rain_intensity_test<-1.04 #cm;
 	float water_input_test<-5*10^7#m3/#h;
 
@@ -189,6 +190,7 @@ global {
 		step <-  time_step; 
 		ratio_received_water <- 1.0;
 		
+		
 		do create_buildings_roads;
 		if verbose {write "Building and roads created: " + length(building);}
 		create institution;
@@ -234,8 +236,10 @@ global {
 		if verbose {write "Road network computed";}	
 		
 		
+		if !only_flood {
+			do create_people;
+		}
 		
-		do create_people;
 		
 		
 		repeat_time<-round(max_speed *step/sqrt(cell_area));
