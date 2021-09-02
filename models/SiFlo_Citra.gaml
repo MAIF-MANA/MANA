@@ -243,7 +243,6 @@ global {
 		
 		
 		repeat_time<-round(max_speed *step/sqrt(cell_area));
-	
 		do manage_scenario;
 	
 		if verbose {write "Scenario initialized";}	
@@ -658,10 +657,8 @@ global {
 
 	//reflex flowing when: increment < (data_flood.rows) {
 	reflex flowing {
-		float t<- machine_time;
 		float hmax<-cell max_of(each.water_height);
-	
-	Vmax<-0.0;
+		Vmax<-0.0;
 		if rain {
 			ask active_cells {
 			 	float rain_intensity <- float(data_rain[0, increment]) #mm;
@@ -672,7 +669,6 @@ global {
 		
 		}
 		
-		
 		if water_input {
 			float debit_water <- float(data_flood[0, increment]) #m3/#h;
 			initial_water_level <- debit_water *step;
@@ -680,7 +676,7 @@ global {
 			
 			
 			ask river_origin {
-				ask cell_origin {
+				ask cell_origin  parallel: parallel_computation{
 					cumul_water_enter<-cumul_water_enter+initial_water_level;
 					
 					water_volume<-water_volume+initial_water_level;
@@ -690,39 +686,43 @@ global {
 				
 				}
 			}
-			ask car {
+		
+			ask car parallel: parallel_computation{
 				do define_cell;
 			}
-			ask building {
+			ask building parallel: parallel_computation {
 				neighbour_water <- false ;
 				water_cell <- false;
 			}
-			ask people where not each.inside {
+			ask people where not each.inside parallel: parallel_computation {
 				my_current_cell <- cell(location);
 			}
-				
-			
 			loop times:repeat_time {
-				ask active_cells {
+				float tt <- machine_time;
+				ask active_cells parallel: parallel_computation{
 					already <- false;
 					do compute_water_altitude;
 				}
-				ask (active_cells sort_by ((each.water_altitude))) {
-					do flow;
-				}
-				ask building {do update_water;}
-				ask car {do update_state;}
-				ask road {do update_flood;}
-				ask people {do update_danger;}
-				ask cell {do update_color;}
+				list<cell> flowing_cell <- active_cells where (each.water_altitude > 0);
+			
+				list<cell> cells_ordered <- flowing_cell sort_by (each.water_altitude);
+					ask cells_ordered {
+						do flow;
+					}
+				ask building parallel: parallel_computation{do update_water;}
+				ask car parallel: parallel_computation{do update_state;}
+				ask road parallel: parallel_computation{do update_flood;}
+				ask people parallel: parallel_computation{do update_danger;}
 				flooded_cell<-remove_duplicates(flooded_cell);
-				
+					
 			}
-		
+			ask building  parallel: parallel_computation {do update_water_color;}
+			
 		
 		float max_wh_bd <- max(building collect each.water_height);
 		float max_wh <- max(cell collect each.water_height);
-		ask cell {do update_color;}
+		ask cell  parallel: parallel_computation {do update_color;}
+		
 	}
 
 	reflex update_road {
@@ -872,7 +872,6 @@ species building {
 	bool water_cell <- false;
 	
 	action update_water {
-		int val_water <- 0;
 		float cell_water_max;
 		cell_water_max <- max(my_cells collect each.water_height);
 
@@ -883,11 +882,7 @@ species building {
 		else {
 			water_height <- max([0,water_height - (water_evacuation / shape.area * step/1#mn)]);
 		}
-		if (display_water) {
-			val_water <- max([0, min([255, int(255 * (1 - (water_height / 1.0#m)))])]);
-			if water_height>5#cm {
-			my_color <- rgb([255, val_water, val_water]);}
-		}
+		
 		state <- min([state,max([0, state - (water_height / 10#m / (step / (1 #mn))) * vulnerability])]);
 		if water_height>water_level_flooded {
 			serious_flood<-true;
@@ -901,6 +896,14 @@ species building {
 		
 		}
 		
+	}
+	action update_water_color {
+		if (display_water) {
+			int val_water <- 0;
+			val_water <- max([0, min([255, int(255 * (1 - (water_height / 1.0#m)))])]);
+			if water_height>5#cm {
+			my_color <- rgb([255, val_water, val_water]);}
+		}
 	}
 
 	aspect default {
@@ -1008,7 +1011,7 @@ species dyke parent: obstacle {
 //***********************************************************************************************************
 //***************************  PEOPLE   **********************************************************************
 //***********************************************************************************************************
-species people skills: [moving] control: simple_bdi {
+species people skills: [moving] control:  parallel_bdi {
 	building my_building;
 	car my_car;
 	bool have_car;
@@ -1672,8 +1675,8 @@ grid cell neighbors: 8 file: mnt_file {
 
 	//Action to flow the water 
 	action flow {
-	is_flowed<-false;
-	//if the height of the water is higher than 1cm then, it can flow among the neighbour cells
+		is_flowed<-false;
+		//if the height of the water is higher than 1cm then, it can flow among the neighbour cells
 		if (water_height>1#cm or water_river_height>1#cm ) {
 		do compute_water_altitude;	
 		do verify_river_full;
