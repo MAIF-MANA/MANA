@@ -701,10 +701,11 @@ global {
 				float tt <- machine_time;
 				ask active_cells parallel: parallel_computation{
 					already <- false;
+					if water_altitude=0.0 {already <- true;}
 					do compute_water_altitude;
 				}
 				list<cell> flowing_cell <- active_cells where (each.water_altitude > 0);
-			
+		
 				list<cell> cells_ordered <- flowing_cell sort_by (each.water_altitude);
 					ask cells_ordered {
 						do flow;
