@@ -116,7 +116,7 @@ global {
 	bool water_input<-true;
 	bool water_test<-false;
 	bool scen<-true;
-	bool only_flood<-true;
+	bool only_flood<-false;
 	float rain_intensity_test<-1.04 #cm;
 	float water_input_test<-5*10^7#m3/#h;
 
@@ -177,8 +177,16 @@ global {
 	
 	list<road> not_usable_roads update: [];
 	
-	bool parallel_computation <- true;
-	bool verbose <- true;
+	bool parallel_computation <- false;
+	bool verbose <- false;
+	bool benchmark <- false;
+	
+	
+	//Variables linked to benchmark
+	map<string,float> time_taken_main;
+	map<string,float> time_taken_sub;
+	float display_every <- step;
+	float init_time <- machine_time;
 	
 	//emotion
 	emotion fear <- new_emotion("fear");
@@ -187,6 +195,8 @@ global {
 	
 		//***************************  INIT **********************************************************************
 	init {
+		float t;
+		if benchmark {t <- machine_time;}
 		step <-  time_step; 
 		ratio_received_water <- 1.0;
 		
@@ -235,11 +245,19 @@ global {
 		
 		if verbose {write "Road network computed";}	
 		
+		if benchmark {
+			do add_data_benchmark("World init - environment", machine_time - t);
+			t <- machine_time;
+		}
 		
 		if !only_flood {
 			do create_people;
 		}
 		
+		if benchmark {
+			do add_data_benchmark("World init - create people", machine_time - t);
+			t <- machine_time;
+		}
 		
 		
 		repeat_time<-round(max_speed *step/sqrt(cell_area));
@@ -247,7 +265,10 @@ global {
 	
 		if verbose {write "Scenario initialized";}	
 		
-	
+		if benchmark {
+			do add_data_benchmark("World init - init scenario", machine_time - t);
+		}
+		
 	
 	}
 	
@@ -301,7 +322,21 @@ global {
 		
 		 
 	}
+	action add_data_benchmark(string id, float val) {
+		if not (id in time_taken_main.keys) {
+			time_taken_main[id] <- val;
+		} else {
+			time_taken_main[id] <- time_taken_main[id] + val;
+		}
+	}
 	
+	action add_data_benchmark_sub(string id, float val) {
+		if not (id in time_taken_sub.keys) {
+			time_taken_sub[id] <- val;
+		} else {
+			time_taken_sub[id] <- time_taken_sub[id] + val;
+		}
+	}
 	action create_natural_environment{
 		create green_area from: green_shape_file {
 			if not (self overlaps world) {
@@ -609,6 +644,7 @@ global {
 	}
 	
 	reflex update_flood when: every(#hour) {
+		float t; if benchmark {t <- machine_time;}
 		int flooded_building<-length(building where (each.serious_flood));
 		float average_building_state<-mean(building collect each.state);
 		
@@ -650,13 +686,18 @@ global {
 		}
 		
 		increment <- increment + 1;
-		
+		if benchmark {
+			do add_data_benchmark("World - update_flood", machine_time - t);
+		}
 	
 	}
 
 
 	//reflex flowing when: increment < (data_flood.rows) {
 	reflex flowing {
+		float t; if benchmark {t <- machine_time;}
+		float tt; if benchmark {tt <- machine_time;}
+		
 		float hmax<-cell max_of(each.water_height);
 		Vmax<-0.0;
 		if rain {
@@ -669,10 +710,11 @@ global {
 		
 		}
 		
+		if benchmark {do add_data_benchmark_sub("World - flowing - step 1", machine_time - tt);tt <- machine_time;}
 		if water_input {
 			float debit_water <- float(data_flood[0, increment]) #m3/#h;
 			initial_water_level <- debit_water *step;
-		if water_test{	initial_water_level <- water_input_test*step/cell_area;}
+			if water_test{	initial_water_level <- water_input_test*step/cell_area;}
 			
 			
 			ask river_origin {
@@ -684,50 +726,80 @@ global {
 								
 				}
 				
-				}
 			}
+		}
+		if benchmark {do add_data_benchmark_sub("World - flowing - step 2", machine_time - tt);tt <- machine_time;}
 		
-			ask car parallel: parallel_computation{
-				do define_cell;
-			}
-			ask building parallel: parallel_computation {
-				neighbour_water <- false ;
-				water_cell <- false;
-			}
-			ask people where not each.inside parallel: parallel_computation {
-				my_current_cell <- cell(location);
-			}
-			loop times:repeat_time {
-				float tt <- machine_time;
-				ask active_cells parallel: parallel_computation{
-					already <- false;
-					if water_altitude=0.0 {already <- true;}
-					do compute_water_altitude;
-				}
-				list<cell> flowing_cell <- active_cells where (each.water_altitude > 0);
+		ask car parallel: parallel_computation{
+			do define_cell;
+		}
+		ask building parallel: parallel_computation {
+			neighbour_water <- false ;
+			water_cell <- false;
+		}
+		ask people where not each.inside parallel: parallel_computation {
+			my_current_cell <- cell(location);
+		}
+		if benchmark {do add_data_benchmark_sub("World - flowing - step 3", machine_time - tt);tt <- machine_time;}
 		
-				list<cell> cells_ordered <- flowing_cell sort_by (each.water_altitude);
-					ask cells_ordered {
-						do flow;
-					}
-				ask building parallel: parallel_computation{do update_water;}
-				ask car parallel: parallel_computation{do update_state;}
-				ask road parallel: parallel_computation{do update_flood;}
-				ask people parallel: parallel_computation{do update_danger;}
-				flooded_cell<-remove_duplicates(flooded_cell);
-					
+		loop times:repeat_time {
+			float ttt; if benchmark {ttt <- machine_time;}
+			ask active_cells parallel: parallel_computation{
+				already <- false;
+				if water_altitude=0.0 {already <- true;}
+				do compute_water_altitude;
 			}
-			ask building  parallel: parallel_computation {do update_water_color;}
+			if benchmark {do add_data_benchmark_sub("World - flowing - step 4 sub_step 1", machine_time - ttt);ttt <- machine_time;}
+		
+			list<cell> flowing_cell <- active_cells where (each.water_altitude > 0);
+			list<cell> cells_ordered <- flowing_cell sort_by (each.water_altitude);
+			if benchmark {do add_data_benchmark_sub("World - flowing - step 4 sub_step 2", machine_time - ttt);ttt <- machine_time;}
+		
+			ask cells_ordered {
+					do flow;
+				}
+			if benchmark {do add_data_benchmark_sub("World - flowing - step 4 sub_step 3", machine_time - ttt);ttt <- machine_time;}
+		
+			ask building parallel: parallel_computation{do update_water;}
+			ask car parallel: parallel_computation{do update_state;}
+			ask road parallel: parallel_computation{do update_flood;}
+			ask people parallel: parallel_computation{do update_danger;}
+			flooded_cell<-remove_duplicates(flooded_cell);
+			if benchmark {do add_data_benchmark_sub("World - flowing - step 4 sub_step 4", machine_time - ttt);ttt <- machine_time;}
+				
+		}
+		if benchmark {do add_data_benchmark_sub("World - flowing - step 4", machine_time - tt);tt <- machine_time;}
+		
+		ask building  parallel: parallel_computation {do update_water_color;}
 			
 		
 		float max_wh_bd <- max(building collect each.water_height);
 		float max_wh <- max(cell collect each.water_height);
 		ask cell  parallel: parallel_computation {do update_color;}
+		if benchmark {do add_data_benchmark_sub("World - flowing - step 5", machine_time - tt);tt <- machine_time;}
 		
+		if benchmark {do add_data_benchmark("World - flowing", machine_time - t);}
 	}
 
 	reflex update_road {
+		float t; if benchmark {t <- machine_time;}
+		
 		current_weights <- road as_map (each::each.shape.perimeter / each.speed_coeff);
+		if benchmark {
+			do add_data_benchmark("World - update_road", machine_time - t);
+		}
+	}
+	
+	reflex write_benchmark when: benchmark and every(display_every){
+		write "\nCycle:" + cycle + " Total time taken (in s) : " + ((machine_time - init_time) / 1000.0) + " - measured: " + (sum(time_taken_main.values) / 1000.0) ;
+		write " ** Main step :";
+		loop id over: (time_taken_main.keys) sort_by (-1 * time_taken_main[each]){
+			write id +" : " + (time_taken_main[id] / 1000.0); 
+		}
+		write " ** Sub step:";
+		loop id over: (time_taken_sub.keys) sort_by (-1 * time_taken_sub[each]){
+			write id +" : " + (time_taken_sub[id] / 1000.0); 
+		}
 	}
 
 }
@@ -783,10 +855,11 @@ species road {
 	float cell_water_max;
 	list<cell> my_cells;
 	bool usable <- true;
-	float speed_coeff <- 1.0 update:  1.0 / (1 + cell_water_max)  min: 0.01;
+	float speed_coeff <- 1.0 min: 0.01;
 
 	action update_flood {
 		cell_water_max <- max(my_cells collect each.water_height);
+		speed_coeff <- 1.0 / (1 + cell_water_max) ;
 		usable <- true;
 		if cell_water_max > 20 #cm {
 			usable <- false;
@@ -967,23 +1040,25 @@ species institution {
 species obstacle {
 	float height min: 0.0;
 	rgb color;
-	float water_pressure update: compute_water_pressure();  //from 0 (no pressure) to 1 (max pressure)
+	float water_pressure ;  //from 0 (no pressure) to 1 (max pressure)
 	float breaking_probability<-0.001; //we assume that this is the probability of breaking with max pressure for each min
 	list<cell> cells_concerned;
 	list<cell> cells_neighbours;
 
 	//Action to compute the water pressure
-	float compute_water_pressure {
+	reflex compute_water_pressure {
+		float t; if benchmark {t <- machine_time;}
+		
 	//If the obstacle doesn't have height, then there will be no pressure
 		if (height = 0.0) {
-			return 0.0;
+			water_pressure<- 0.0;
 		} else {
 		//The level of the water is equals to the maximul level of water in the neighbours cells
 			float water_level <- cells_neighbours max_of (each.water_height);
 			//Return the water pressure as the minimal value between 1 and the water level divided by the height
-			return min([1.0, water_level / height]);
+			water_pressure<- min([1.0, water_level / height]);
 		}
-
+		if benchmark {ask world {do add_data_benchmark("obstacle - compute_water_pressure", machine_time - t);}}
 	}
 
 
@@ -1001,18 +1076,21 @@ species dyke parent: obstacle {
 
 	//Reflex to break the dynamic of the water
 	reflex breaking{
+		float t; if benchmark {t <- machine_time;}
+		
 		float timing <-step/1 #mn;
 				loop while:timing>=0 {
 					if flip(breaking_probability*water_pressure) {do die;}
 					timing<-timing-1;
 		}
+		if benchmark {ask world {do add_data_benchmark("dyke - breaking", machine_time - t);}}
 	}
 }
 
 //***********************************************************************************************************
 //***************************  PEOPLE   **********************************************************************
 //***********************************************************************************************************
-species people skills: [moving] control:  parallel_bdi {
+species people skills: [moving] control:  simple_bdi {
 	building my_building;
 	car my_car;
 	bool have_car;
@@ -1045,7 +1123,7 @@ species people skills: [moving] control:  parallel_bdi {
 
 	}
 
-	float fear_level <- 0.0 update: has_emotion(fear) ? get_emotion(fear).intensity : 0.0;
+	float fear_level <- 0.0 ;
 	float strength_drain_off <- rnd(0.5);
 	float strength_evacuate <- rnd(0.5);
 	float strength_inform <- rnd(-0.5, 0.5);
@@ -1056,7 +1134,7 @@ species people skills: [moving] control:  parallel_bdi {
 	float strength_protect_turn_off <- rnd(1.0);
 	float strength_protect_weather_strip <- rnd(1.0);
 	float strength_outside<-rnd(1.0) ;
-	float strength_do_nothing <- 0.25 update: 0.25 - fear_level;
+	float strength_do_nothing <- 0.25 ;
 	
 	float danger_inside <- 0.0; //between 0 and 1 (1 danger of imeediate death)
 	float danger_outside <- 0.0; //between 0 and 1 (1 danger of imeediate death)
@@ -1090,6 +1168,9 @@ species people skills: [moving] control:  parallel_bdi {
 
 	//***************************  perception ********************************
 	reflex my_perception {
+		float t; if benchmark {t <- machine_time;}
+		fear_level <- has_emotion(fear) ? get_emotion(fear).intensity : 0.0;
+		strength_do_nothing <-  0.25 - fear_level;
 		obedience <- obedience_init - 0.2 * abs(0.5 - fear_level);
 		if (has_desire(outside)) {
 			mental_state out <- get_desire(outside);
@@ -1140,7 +1221,7 @@ species people skills: [moving] control:  parallel_bdi {
 			if (my_current_cell.water_height > water_height_perception) {do add_belief(water_is_here);}
 		
 		} 
-		
+		if benchmark {ask world {do add_data_benchmark("people - perception", machine_time - t);}}
 	}
 	
 	action increase_life_at_stake(float prev_water_level) {
@@ -1186,16 +1267,22 @@ species people skills: [moving] control:  parallel_bdi {
 	}
 	
 	reflex test_proba when: (time mod 10#mn) = 0 {
+		float t; if benchmark {t <- machine_time;}
 		if flip(max_danger_outside) or flip(max_danger_inside) {
 			do to_die;
 		}
 		max_danger_inside <- 0.0;
 		max_danger_outside <- 0.0;
+		
+		if benchmark {ask world {do add_data_benchmark("people - test_proba", machine_time - t);}}
 	}
 	
 		
 	reflex agenda when:(time mod outside_test_period) = 0{
+		float t; if benchmark {t <- machine_time;}
 		if flip(0.3) {do add_belief(need_to_go_outside);}
+		
+		if benchmark {ask world {do add_data_benchmark("people - test_proba", machine_time - t);}}
 	}
 	
 	
@@ -1226,8 +1313,12 @@ species people skills: [moving] control:  parallel_bdi {
 
 	
 		//if the agent perceives other people agents in their neighborhood that have fear, it can be contaminate by this emotion
-	perceive target:people in: fear_contagion_distance when: (time mod 30#mn) = 0{
-		emotional_contagion emotion_detected:fear ;
+	reflex fear_contagion when: (time mod 30#mn) = 0{
+		float t; if benchmark {t <- machine_time;}
+		ask people at_distance fear_contagion_distance  {
+			emotional_contagion emotion_detected:fear ;
+		}
+		if benchmark {ask world {do add_data_benchmark("people - fear_contagion", machine_time - t);}}
 	}
 	
 	bool bool_house_flooded <- false update: has_belief(house_flooded);
@@ -1272,28 +1363,38 @@ species people skills: [moving] control:  parallel_bdi {
 	
 	//***************************  NORMS  ********************************************************
 	norm instruction_wait obligation: wait{
+		float t; if benchmark {t <- machine_time;}
 		 do remove_intention(wait, true); 
+		if benchmark {ask world {do add_data_benchmark("people - norm instruction_wait", machine_time - t);}}
 		
 	}
 	norm behaviour_inquire obligation: inquire {
+		float t; if benchmark {t <- machine_time;}
 		do inquiring_information;
 		do remove_intention(inquire, true);
+		if benchmark {ask world {do add_data_benchmark("people - norm behaviour_inquire", machine_time - t);}}
 	}
 	
 	norm behaviour_upstairs obligation: upstairs {
+		float t; if benchmark {t <- machine_time;}
 		do going_upstairs;
 		do remove_intention(upstairs, true);
+		if benchmark {ask world {do add_data_benchmark("people - norm behaviour_upstairs", machine_time - t);}}
 	}
 	
 	
 	norm protect_properties obligation: protect_properties {
+		float t; if benchmark {t <- machine_time;}
 		do protect_properties;
 		do remove_intention(protect_properties, true);
+		if benchmark {ask world {do add_data_benchmark("people - norm protect_properties", machine_time - t);}}
 	}
 	
 	norm weather_strip_house obligation: weather_strip {
+		float t; if benchmark {t <- machine_time;}
 		do weather_strip_house;
 		do remove_intention(weather_strip, true);
+		if benchmark {ask world {do add_data_benchmark("people - norm weather_strip_house", machine_time - t);}}
 	}
 	 
 	
@@ -1301,22 +1402,30 @@ species people skills: [moving] control:  parallel_bdi {
 	
 	
 	plan do_nothing intention: do_nothing {
+		float t; if benchmark {t <- machine_time;}
+	
 		do remove_intention(do_nothing, true);
 		do add_desire(do_nothing, strength_do_nothing);
+		if benchmark {ask world {do add_data_benchmark("people - test_proba", machine_time - t);}}
 		
 	}
 
 	plan drain_off_water intention: drain_off {
+		float t; if benchmark {t <- machine_time;}
+	
 		my_building.water_height <- max([0, my_building.water_height - 0.01 #m3 / #mn / my_building.shape.area * step]);
 		do remove_intention(drain_off, true);
 		nb_drain_off <- nb_drain_off+ 1;
 		nb_waiting <- nb_waiting - 1;
 		current_stair <- 0;
 		
+		if benchmark {ask world {do add_data_benchmark("people - drain_off_water", machine_time - t);}}
 	}
 
 
 	plan evacuate intention: evacuate {
+		float t; if benchmark {t <- machine_time;}
+		
 		current_stair<-0;
 		
 		inside<-false;
@@ -1352,11 +1461,13 @@ species people skills: [moving] control:  parallel_bdi {
 			}
 
 		}
-		
+		if benchmark {ask world {do add_data_benchmark("people - evacuate", machine_time - t);}}
 	}
 
 
 	plan give_information intention: inform  when: not empty(friends_to_inform){
+		float t; if benchmark {t <- machine_time;}
+		
 		nb_inform <- nb_inform+ 1;
 		nb_waiting <- nb_waiting - 1;
 		people people_to_inform <- friends_to_inform with_max_of (get_social_link(new_social_link(each)).liking + get_social_link(new_social_link(each)).solidarity);
@@ -1371,10 +1482,12 @@ species people skills: [moving] control:  parallel_bdi {
 		strength_inform <-  empty(friends_to_inform) ?-1.0: (strength_inform - strength_information_decrement);
 		do remove_intention(inform, true);
 		
+		if benchmark {ask world {do add_data_benchmark("people - give_information", machine_time - t);}}
 	}
 
 
 	plan go_outside intention: outside {
+		float t; if benchmark {t <- machine_time;}
 		current_stair<-0;		
 		nb_outside <- nb_outside+ 1;
 		nb_waiting <- nb_waiting - 1;
@@ -1421,6 +1534,7 @@ species people skills: [moving] control:  parallel_bdi {
 		}
 		
 		
+		if benchmark {ask world {do add_data_benchmark("people - go_outside", machine_time - t);}}
 	}
 
 
@@ -1432,8 +1546,10 @@ species people skills: [moving] control:  parallel_bdi {
 	
 	
 	plan go_upstairs intention: upstairs {
+		float t; if benchmark {t <- machine_time;}
 		do going_upstairs;
 		do remove_intention(upstairs, true);
+		if benchmark {ask world {do add_data_benchmark("people - go_upstairs", machine_time - t);}}
 	}
 
 	action inquiring_information {
@@ -1443,12 +1559,15 @@ species people skills: [moving] control:  parallel_bdi {
 	}
 	
 	plan inquire_information intention: inquire {
+		float t; if benchmark {t <- machine_time;}
 		do inquiring_information;
 		do remove_intention(inquire, true); 	
+		if benchmark {ask world {do add_data_benchmark("people - inquire_information", machine_time - t);}}
 	}
 
 
 	plan protect_my_car intention: protect_car {
+		float t; if benchmark {t <- machine_time;}
 		
 		current_stair <- 0;
 		nb_protect_car <- nb_protect_car+ 1;
@@ -1485,12 +1604,16 @@ species people skills: [moving] control:  parallel_bdi {
 			}
 
 		}
+		
+		if benchmark {ask world {do add_data_benchmark("people - protect_my_car", machine_time - t);}}
 	}
 
 
 	plan protect_my_properties intention: protect_properties {
+		float t; if benchmark {t <- machine_time;}
 		do protect_properties;
 		do remove_intention(protect_properties, true); 	
+		if benchmark {ask world {do add_data_benchmark("people - protect_my_properties", machine_time - t);}}
 	}
 
 
@@ -1537,17 +1660,21 @@ species people skills: [moving] control:  parallel_bdi {
 
 
 	plan turn_off_nrj intention: turn_off {
+		float t; if benchmark {t <- machine_time;}
 		nb_turn_off <- nb_turn_off+ 1;
 		current_stair<-0;
 		nb_waiting <- nb_waiting - 1;
 		my_building.nrj_on <- false;
 		do remove_belief(energy_is_on);
 		do remove_intention(turn_off, true);
+		if benchmark {ask world {do add_data_benchmark("people - turn_off_nrj", machine_time - t);}}
 	}
 
 	plan weather_strip_house intention: weather_strip {
+		float t; if benchmark {t <- machine_time;}
 		do weather_strip_house;
-		do remove_intention(weather_strip, true); 	
+		do remove_intention(weather_strip, true); 
+		if benchmark {ask world {do add_data_benchmark("people - weather_strip_house", machine_time - t);}}	
 	}
 	
 	
@@ -1824,9 +1951,10 @@ grid cell neighbors: 8 file: mnt_file {
 //***************************  OUTPUT  **********************************************************************
 //***********************************************************************************************************
 
-experiment "go_flood_headless" type: gui {
-//	parameter "scenario" var:scenario ;
-//	parameter "type_explo" var:type_explo;
+experiment benchmark type: gui autorun:true {
+	action _init_ {
+		create simulation with:(benchmark: true, scen:false, verbose:false);
+	}
 	
 }
 
