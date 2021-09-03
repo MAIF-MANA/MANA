@@ -116,7 +116,8 @@ global {
 	bool water_input<-true;
 	bool water_test<-false;
 	bool scen<-true;
-	bool only_flood<-false;
+	bool only_flood<-true;
+	int model_flow<-2; //1: siflo, 2:simplified, 3:other simplified
 	float rain_intensity_test<-1.04 #cm;
 	float water_input_test<-5*10^7#m3/#h;
 
@@ -693,8 +694,14 @@ global {
 	}
 
 
+	reflex flower {
+if model_flow=1 {do flowing1;}
+if model_flow>1 {do flowing2;}
+
+}
+
 	//reflex flowing when: increment < (data_flood.rows) {
-	reflex flowing {
+	action flowing1 {
 		float t; if benchmark {t <- machine_time;}
 		float tt; if benchmark {tt <- machine_time;}
 		
@@ -768,6 +775,97 @@ global {
 			if benchmark {do add_data_benchmark_sub("World - flowing - step 4 sub_step 4", machine_time - ttt);ttt <- machine_time;}
 				
 		}
+		if benchmark {do add_data_benchmark_sub("World - flowing - step 4", machine_time - tt);tt <- machine_time;}
+		
+		ask building  parallel: parallel_computation {do update_water_color;}
+			
+		
+		float max_wh_bd <- max(building collect each.water_height);
+		float max_wh <- max(cell collect each.water_height);
+		ask cell  parallel: parallel_computation {do update_color;}
+		if benchmark {do add_data_benchmark_sub("World - flowing - step 5", machine_time - tt);tt <- machine_time;}
+		
+		if benchmark {do add_data_benchmark("World - flowing", machine_time - t);}
+	}
+
+
+	//reflex flowing when: increment < (data_flood.rows) {
+	action flowing2 {
+		float t; if benchmark {t <- machine_time;}
+		float tt; if benchmark {tt <- machine_time;}
+		
+		float hmax<-cell max_of(each.water_height);
+		Vmax<-0.0;
+		if rain {
+			ask active_cells {
+			 	float rain_intensity <- float(data_rain[0, increment]) #mm;
+				 rain_intensity <- rain_intensity_test;
+				water_height<-water_height+rain_intensity*step/1#h;
+	
+			}
+		
+		}
+		
+		if benchmark {do add_data_benchmark_sub("World - flowing - step 1", machine_time - tt);tt <- machine_time;}
+		if water_input {
+			float debit_water <- float(data_flood[0, increment]) #m3/#h;
+			initial_water_level <- debit_water *step;
+			if water_test{	initial_water_level <- water_input_test*step/cell_area;}
+			
+			
+			ask river_origin {
+				ask cell_origin  parallel: parallel_computation{
+					cumul_water_enter<-cumul_water_enter+initial_water_level;
+					
+					water_volume<-water_volume+initial_water_level;
+					do compute_water_altitude;
+								
+				}
+				
+			}
+		}
+		if benchmark {do add_data_benchmark_sub("World - flowing - step 2", machine_time - tt);tt <- machine_time;}
+		
+		ask car parallel: parallel_computation{
+			do define_cell;
+		}
+		ask building parallel: parallel_computation {
+			neighbour_water <- false ;
+			water_cell <- false;
+		}
+		ask people where not each.inside parallel: parallel_computation {
+			my_current_cell <- cell(location);
+		}
+		if benchmark {do add_data_benchmark_sub("World - flowing - step 3", machine_time - tt);tt <- machine_time;}
+		
+		
+		
+			float ttt; if benchmark {ttt <- machine_time;}
+			ask active_cells parallel: parallel_computation{
+				already <- false;
+				if water_altitude=0.0 {already <- true;}
+				do compute_water_altitude;
+			}
+			if benchmark {do add_data_benchmark_sub("World - flowing - step 4 sub_step 1", machine_time - ttt);ttt <- machine_time;}
+		
+			list<cell> flowing_cell <- active_cells where (each.water_altitude > 0);
+			list<cell> cells_ordered <- flowing_cell sort_by (each.water_altitude);
+			if benchmark {do add_data_benchmark_sub("World - flowing - step 4 sub_step 2", machine_time - ttt);ttt <- machine_time;}
+		
+			ask cells_ordered {
+				if model_flow=2 {do flow2;}
+				if model_flow=3 {do flow3;}
+			}
+			if benchmark {do add_data_benchmark_sub("World - flowing - step 4 sub_step 3", machine_time - ttt);ttt <- machine_time;}
+		
+			ask remove_duplicates((active_cells where (each.water_height > 0)) accumulate each.my_buildings) parallel: parallel_computation{do update_water;}
+			ask car parallel: parallel_computation{do update_state;}
+			ask road parallel: parallel_computation{do update_flood;}
+			ask people parallel: parallel_computation{do update_danger;}
+			flooded_cell<-remove_duplicates(flooded_cell);
+			if benchmark {do add_data_benchmark_sub("World - flowing - step 4 sub_step 4", machine_time - ttt);ttt <- machine_time;}
+				
+		
 		if benchmark {do add_data_benchmark_sub("World - flowing - step 4", machine_time - tt);tt <- machine_time;}
 		
 		ask building  parallel: parallel_computation {do update_water_color;}
@@ -1809,8 +1907,10 @@ grid cell neighbors: 8 file: mnt_file {
 		do compute_water_altitude;	
 		do verify_river_full;
 		//We get all the cells already done
+		
 			int nb_neighbors<-length(neighbors);
 			list<cell> neighbour_cells_al <- neighbors where (each.already);
+
 			//If there are cells already done then we continue         
 			do compute_slope;
 			if (!empty(neighbour_cells_al)) {
@@ -1898,6 +1998,113 @@ grid cell neighbors: 8 file: mnt_file {
 		}
 
 	}
+
+	//Action to flow the water 
+	action flow2 {
+		is_flowed<-false;
+		if (water_height>1#cm or water_river_height>1#cm ) {
+		do compute_water_altitude;	
+		do verify_river_full;
+			int nb_neighbors<-length(neighbors);
+		//	list<cell> neighbour_cells_al <-  agents_at_distance(dp) of_species cell where (each.already);     
+			list<cell> neighbour_cells_al <- neighbors where (each.already);
+			list<cell> cell_to_flow;
+			do compute_slope;
+			wac<-water_river_height*river_broad+sqrt(cell_area)*water_height;
+			wpc<-2*(water_river_height+river_broad+sqrt(cell_area)+water_height); 
+			rh<-wac/(2*wpc);
+			V<-min([max_speed,max([0.1,rh^(2/3)*K*slope^(1/2)])]);	
+			Vmax<-max([V,Vmax]);			
+			dp<-V*step; //distance parcourue en 1 step
+			volume_distrib<-water_volume;
+			float w_a<-water_altitude;
+			ask neighbour_cells_al {
+				do compute_water_altitude;
+				if (w_a > water_altitude and (w_a > (altitude+obstacle_height-river_depth))) {
+					add myself to:cell_to_flow;
+					ask neighbors where (each.already) {
+						if (w_a > water_altitude and (w_a > (altitude+obstacle_height-river_depth))) {
+							add myself to:cell_to_flow;
+						/*	ask neighbors where (each.already) {
+								if (w_a > water_altitude and (w_a > (altitude+obstacle_height-river_depth))) {
+									add myself to:cell_to_flow;
+							 		ask neighbors where (each.already) {
+										if (w_a > water_altitude and (w_a > (altitude+obstacle_height-river_depth))) {
+										add myself to:cell_to_flow;
+										ask neighbors where (each.already) {
+											if (w_a > water_altitude and (w_a > (altitude+obstacle_height-river_depth))) {
+											add myself to:cell_to_flow;	
+										}
+										}
+									}
+									}
+					
+								}
+								}*/
+							}
+							}
+						}
+			}
+
+					flow_cells <- remove_duplicates(cell_to_flow);					
+					if (!empty(flow_cells)) {			
+						is_flowed<-true;
+						float prop_flow;
+						prop_flow<-1/length(flow_cells);
+						float slope_sum<-flow_cells sum_of(slope_neigh[each]);
+						ask flow_cells {
+							volume_distrib_cell<-myself.volume_distrib*prop_flow;
+							water_volume <- water_volume + volume_distrib_cell;	
+							do compute_water_altitude;
+						} 
+				 		water_volume <- water_volume - volume_distrib;
+						do compute_water_altitude;
+					
+			} 
+ 	}
+		already <- true;
+		if is_sea {	water_height <- 0.0;}
+}
+
+
+	//Action to flow the water 
+	action flow3 {
+		is_flowed<-false;
+		if (water_height>1#cm or water_river_height>1#cm ) {
+		do compute_water_altitude;	
+		do verify_river_full;
+			int nb_neighbors<-length(neighbors);
+			list<cell> neighbour_cells_al <-  agents_at_distance(dp) of_species cell where (each.already);     
+			do compute_slope;
+				wac<-water_river_height*river_broad+sqrt(cell_area)*water_height;
+				wpc<-2*(water_river_height+river_broad+sqrt(cell_area)+water_height); 
+				rh<-wac/(2*wpc);
+				V<-min([max_speed,max([0.1,rh^(2/3)*K*slope^(1/2)])]);	
+				Vmax<-max([V,Vmax]);			
+				dp<-V*step; //distance parcourue en 1 step
+				volume_distrib<-water_volume;
+				if (!empty(neighbour_cells_al)) {
+					ask neighbour_cells_al {do compute_water_altitude;	}
+					flow_cells <- (neighbour_cells_al where ((self.water_altitude > each.water_altitude) and (self.water_altitude > (each.altitude+each.obstacle_height-each.river_depth))));					
+					if (!empty(flow_cells)) {			
+						is_flowed<-true;
+						float prop_flow;
+						prop_flow<-1/length(flow_cells);
+						float slope_sum<-flow_cells sum_of(slope_neigh[each]);
+						ask flow_cells {
+							volume_distrib_cell<-myself.volume_distrib*prop_flow;
+							water_volume <- water_volume + volume_distrib_cell;	
+							do compute_water_altitude;
+						} 
+				 		water_volume <- water_volume - volume_distrib;
+						do compute_water_altitude;
+					}
+			} 
+ 	}
+		already <- true;
+		if is_sea {	water_height <- 0.0;}
+}
+
 
 	//Update the color of the cell
 	action update_color {
