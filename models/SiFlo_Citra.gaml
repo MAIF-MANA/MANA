@@ -185,7 +185,7 @@ global {
 	//Variables linked to benchmark
 	map<string,float> time_taken_main;
 	map<string,float> time_taken_sub;
-	float display_every <- step;
+	float display_every <- 5.0 * time_step;
 	float init_time <- machine_time;
 	
 	//emotion
@@ -756,11 +756,11 @@ global {
 			if benchmark {do add_data_benchmark_sub("World - flowing - step 4 sub_step 2", machine_time - ttt);ttt <- machine_time;}
 		
 			ask cells_ordered {
-					do flow;
-				}
+				do flow;
+			}
 			if benchmark {do add_data_benchmark_sub("World - flowing - step 4 sub_step 3", machine_time - ttt);ttt <- machine_time;}
 		
-			ask building parallel: parallel_computation{do update_water;}
+			ask remove_duplicates((active_cells where (each.water_height > 0)) accumulate each.my_buildings) parallel: parallel_computation{do update_water;}
 			ask car parallel: parallel_computation{do update_state;}
 			ask road parallel: parallel_computation{do update_flood;}
 			ask people parallel: parallel_computation{do update_danger;}
