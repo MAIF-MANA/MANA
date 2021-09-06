@@ -60,6 +60,7 @@ global {
 	bool display_water <- true;
 	float max_distance_to_river <-3000#m;
 	float time_step <- 30 #sec; //0.2#mn;  
+	float time_simulation<-3#h;
 		
 	float water_height_perception <- 15 #cm;
 	float water_height_danger_inside_energy_on <- 20 #cm;
@@ -115,9 +116,10 @@ global {
 	bool rain<-true;
 	bool water_input<-true;
 	bool water_test<-false;
+	float time_flood_test<-2#h;
 	bool scen<-true;
-	bool only_flood<-true;
-	int model_flow<-2; //1: siflo, 2:simplified, 3:other simplified
+	bool only_flood<-false;
+	int model_flow<-1; //1: siflo, 2:simplified, 3:other simplified
 	float rain_intensity_test<-1.04 #cm;
 	float water_input_test<-5*10^7#m3/#h;
 
@@ -581,9 +583,9 @@ global {
 		 	 water_input<-true;
 			 water_test<-true;
 	
-			if alea="petit" {water_input_test<-1*10^6#m3/#h;	}
-			if alea="moyen" {water_input_test<-1*10^7#m3/#h;	}
-			if alea="fort" {water_input_test<-1*10^8#m3/#h;	}
+			if alea="petit" {water_input_test<-1*10^2#m3/#h;	}
+			if alea="moyen" {water_input_test<-5*10^5#m3/#h;	}
+			if alea="fort" {water_input_test<-1*10^6#m3/#h;	}
 			
 			
 			if scenario="statu quo" {}
@@ -648,8 +650,6 @@ global {
 		float t; if benchmark {t <- machine_time;}
 		int flooded_building<-length(building where (each.serious_flood));
 		float average_building_state<-mean(building collect each.state);
-		
-		
 		int flooded_car<-length(car where (each.domaged));
 		float proba_know_rules<-one_of(institution).DICRIM_information;
 		float  river_broad<-one_of(river).river_broad;
@@ -666,7 +666,7 @@ global {
 		save results to: "results_" + type_explo+ "_" + scenario+".csv" type:text rewrite: false;
 */		
 		//if (increment = data_flood.rows or increment = data_rain.rows) {
-		if (time=1#h) {
+		if (time=time_simulation) {
 			nb_flooded_cell<-length(flooded_cell);
 			write ("*************************");
 		//	write ("scenario : "+scenario);
@@ -684,6 +684,7 @@ global {
 			write ("flooded cell : "+nb_flooded_cell);
 			
 			end_simul<-true;
+			do pause;
 		}
 		
 		increment <- increment + 1;
@@ -721,7 +722,7 @@ if model_flow>1 {do flowing2;}
 		if water_input {
 			float debit_water <- float(data_flood[0, increment]) #m3/#h;
 			initial_water_level <- debit_water *step;
-			if water_test{	initial_water_level <- water_input_test*step/cell_area;}
+			if water_test and time<=time_flood_test{	initial_water_level <- water_input_test*step/cell_area;}
 			
 			
 			ask river_origin {
@@ -810,7 +811,7 @@ if model_flow>1 {do flowing2;}
 		if water_input {
 			float debit_water <- float(data_flood[0, increment]) #m3/#h;
 			initial_water_level <- debit_water *step;
-			if water_test{	initial_water_level <- water_input_test*step/cell_area;}
+			if water_test and time<=time_flood_test{	initial_water_level <- water_input_test*step/cell_area;}
 			
 			
 			ask river_origin {
@@ -2139,9 +2140,9 @@ grid cell neighbors: 8 file: mnt_file {
 		if (!is_sea) {color<-rgb(int(min([255,max([245 - 0.8 *altitude, 0])])), int(min([255,max([245 - 1.2 *altitude, 0])])), int(min([255,max([0,220 - 2 * altitude])])));}
 		
 		
-		if water_river_height>1#cm and !is_sea {color <- #deepskyblue;}
+		if water_river_height>5#cm and !is_sea {color <- #deepskyblue;}
 		
-		if water_height>1#cm and !(flooded_cell contains(self)) and !is_sea {add self to:flooded_cell;}
+		if water_height>5#cm and !(flooded_cell contains(self)) and !is_sea {add self to:flooded_cell;}
 		if flooded_cell contains(self) {color <- #blue;}
 	}
 
@@ -2187,7 +2188,7 @@ experiment "go_flood" type: gui {
 			
 			
 		}
-		
+		/* 
 		display charts refresh: every(10 #mn) {
 			chart "Water level " size:{1.0, 1/4} {
 				data "Water level" value: cell sum_of (each.water_height) color: #blue;
@@ -2232,7 +2233,7 @@ experiment "go_flood" type: gui {
 				
 			}
 			
-		}
+		}*/
 
 	}
 	
