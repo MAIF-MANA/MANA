@@ -117,8 +117,9 @@ global {
 	bool water_input<-true;
 	bool water_test<-false;
 	float time_flood_test<-2#h;
-	bool scen<-true;
-	bool only_flood<-false;
+	bool scen<-false;      //active ou desactive l'écran de selection des scnéario
+	bool creator_mode<-true;
+	bool only_flood<-true;
 	int model_flow<-1; //1: siflo, 2:simplified, 3:other simplified
 	float rain_intensity_test<-1.04 #cm;
 	float water_input_test<-5*10^7#m3/#h;
@@ -597,53 +598,12 @@ global {
 	
 //***************************  END of INIT     **********************************************************************
 
-//************************************* SCENARIOS ************************************************************************
-	/*action load_parameters {
-		switch scenario {
-			match "S1" {
-				//scenario 1
-				ask institution {
-					DICRIM_information<-0.1;
-					canal_maintenance<-false;
-					river_maintenance<-false;
-				}
-			}
-			match "S2" {
-				//scenario 2
-				ask institution {
-					DICRIM_information<-1.0;
-					canal_maintenance<-false;
-					river_maintenance<-false;
-				}
-			}
-			match "S3" {
-				//scenario 3
-				ask institution {
-					DICRIM_information<-0.1;
-					canal_maintenance<-true;
-					river_maintenance<-true;
-				}
-			}
-			match "S4" {
-				//scenario 4
-				ask institution {
-					DICRIM_information<-1.0;
-					canal_maintenance<-true;
-					river_maintenance<-true;
-				}
-			}
-		}
-	
-	
 
-	
-	}*/
 	//***************************  REFLEX GLOBAL **********************************************************************
 	
 	
 	reflex garbage_collector when: every(30 #mn) {
 		ask experiment {do compact_memory;}
-		
 	}
 	
 	reflex update_flood when: every(#hour) {
@@ -654,7 +614,7 @@ global {
 		float proba_know_rules<-one_of(institution).DICRIM_information;
 		float  river_broad<-one_of(river).river_broad;
 		float  river_depth<-one_of(river).river_depth;
-	//	float coeff_enter_canal<-one_of(canal).coeff_enter_canal;
+	
 		
 		
 	/* 	string 	results <- ""+ 
@@ -669,7 +629,6 @@ global {
 		if (time=time_simulation) {
 			nb_flooded_cell<-length(flooded_cell);
 			write ("*************************");
-		//	write ("scenario : "+scenario);
 			write ("number of people : ") +nb_people_begin;
 			write ("number of evacuated people : " +leaving_people);
 			write ("number of injuried people inside : " +injuried_people_inside);
@@ -698,10 +657,10 @@ global {
 	reflex flower {
 if model_flow=1 {do flowing1;}
 if model_flow>1 {do flowing2;}
-
+ask cell where (each.is_dyke and each.water_height>1#m) {do breaking_dyke;}
 }
 
-	//reflex flowing when: increment < (data_flood.rows) {
+
 	action flowing1 {
 		float t; if benchmark {t <- machine_time;}
 		float tt; if benchmark {tt <- machine_time;}
@@ -790,7 +749,6 @@ if model_flow>1 {do flowing2;}
 	}
 
 
-	//reflex flowing when: increment < (data_flood.rows) {
 	action flowing2 {
 		float t; if benchmark {t <- machine_time;}
 		float tt; if benchmark {tt <- machine_time;}
@@ -900,6 +858,74 @@ if model_flow>1 {do flowing2;}
 			write id +" : " + (time_taken_sub[id] / 1000.0); 
 		}
 	}
+
+
+
+//******************************** USER COMMAND ****************************************
+
+
+	//current action type
+	int action_type <- -1;	
+	
+	//images used for the buttons
+	list<file> images <- [
+		file("../images/dyke.jpg"),
+		file("../images/building.jpg"),
+		file("../images/building_demol.png"),
+		file("../images/eraser.png")
+	]; 
+	
+	action activate_act {
+		button selected_but <- first(button overlapping (circle(1) at_location #user_location));
+		if(selected_but != nil) {
+			ask selected_but {
+				ask button {bord_col<-#black;}
+				if (action_type != id) {
+					action_type<-id;
+					bord_col<-#red;
+				} else {
+					action_type<- -1;
+				}
+				
+			}
+		}
+	}
+
+	action cell_management {
+		cell selected_cell <- first(cell overlapping (circle(1.0) at_location #user_location));
+		if(selected_cell != nil) {
+			ask selected_cell {
+				if action_type=0 {	
+					do create_dyke;		
+					write ("new dyke : " +name);
+				}
+				
+				if action_type=1 {	
+					write ("Under construction");
+				}
+				
+				if action_type=2 {	
+					write ("Under construction");
+				}
+				
+				if action_type=3 {	
+					write ("Under construction");
+				}
+				
+				
+				
+			/*	build <- action_type;
+				switch action_type {
+					match 0 {color <- #red;}
+					match 1 {color <- #white;}
+					match 2 {color <- #yellow;}
+					match 3 {color <- #black; build <- -1;}
+				}*/
+			}
+		}
+	}
+
+
 
 }
 //***************************  END of GLOBAL **********************************************************************
@@ -1133,58 +1159,7 @@ species institution {
 	
 }
 
-//***********************************************************************************************************
-//***************************  DYKE **********************************************************************
-//***********************************************************************************************************
-species obstacle {
-	float height min: 0.0;
-	rgb color;
-	float water_pressure ;  //from 0 (no pressure) to 1 (max pressure)
-	float breaking_probability<-0.001; //we assume that this is the probability of breaking with max pressure for each min
-	list<cell> cells_concerned;
-	list<cell> cells_neighbours;
 
-	//Action to compute the water pressure
-	reflex compute_water_pressure {
-		float t; if benchmark {t <- machine_time;}
-		
-	//If the obstacle doesn't have height, then there will be no pressure
-		if (height = 0.0) {
-			water_pressure<- 0.0;
-		} else {
-		//The level of the water is equals to the maximul level of water in the neighbours cells
-			float water_level <- cells_neighbours max_of (each.water_height);
-			//Return the water pressure as the minimal value between 1 and the water level divided by the height
-			water_pressure<- min([1.0, water_level / height]);
-		}
-		if benchmark {ask world {do add_data_benchmark("obstacle - compute_water_pressure", machine_time - t);}}
-	}
-
-
-	aspect geometry {
-		int val <- int(255 * water_pressure);
-		color <- rgb(val, 255 - val, 0);
-		draw shape color: color depth: height * 5 border: color;
-	}
-
-}
-
-//Species dyke which is derivated from obstacle
-species dyke parent: obstacle {
-
-
-	//Reflex to break the dynamic of the water
-	reflex breaking{
-		float t; if benchmark {t <- machine_time;}
-		
-		float timing <-step/1 #mn;
-				loop while:timing>=0 {
-					if flip(breaking_probability*water_pressure) {do die;}
-					timing<-timing-1;
-		}
-		if benchmark {ask world {do add_data_benchmark("dyke - breaking", machine_time - t);}}
-	}
-}
 
 //***********************************************************************************************************
 //***************************  PEOPLE   **********************************************************************
@@ -1807,23 +1782,24 @@ grid cell neighbors: 8 file: mnt_file {
 	bool is_river <- false;
 	bool is_river_full<-false;
 	bool is_sea <- false;
-	bool is_canal <- false;
-	bool is_canal_origin<-false;
+	bool is_dyke<-false;
 	bool already;
 	float water_cell_altitude;
 	float river_altitude;
 	float water_altitude;
 	float remaining_time;
 	
-	list<building> obstacles;
 	list<building> my_buildings;
-	
 	list<river> my_rivers;
 	list<green_area> my_green_areas;
 	float river_broad<-0.0;
 	float river_depth<-0.0;
-	float obstacle_height <- 0.0;
 	bool escape_cell;
+	
+	//dyke
+	float dyke_height<-0.0;
+	float water_pressure ;  //from 0 (no pressure) to 1 (max pressure)
+	float breaking_probability<-0.001; //we assume that this is the probability of breaking with max pressure for each min
 	
 	
 	
@@ -1844,16 +1820,28 @@ grid cell neighbors: 8 file: mnt_file {
 	float volume_distrib_cell;
 	bool is_flowed<-false;
 	
-	//Action to compute the highest obstacle among the obstacles
-	float compute_highest_obstacle {
-		if (empty(obstacles)) {
-			return 0.0;
-		} else {
-			return obstacles max_of (each.bd_height);
-		}
+	int build <- -1;
 
+	
+	user_command "change color"action:create_dyke;
+	
+	action create_dyke {
+	is_dyke<-true;
+	dyke_height<-2#m;
 	}
-
+	
+	//Reflex to break the dynamic of the water
+	action breaking_dyke{
+		water_pressure<- min([1.0, water_height / dyke_height]);		
+		float timing <-step/1 #mn;
+				loop while:timing>=0 {
+					if flip(breaking_probability*water_pressure) {
+						is_dyke<-false;
+						dyke_height<-0#m;
+					}
+					timing<-timing-1;
+		}
+	}
 	
 	action compute_water_altitude {
 			if is_river {water_river_height<-min([water_volume/(sqrt(cell_area)*river_broad),river_depth]);}
@@ -1947,7 +1935,7 @@ grid cell neighbors: 8 file: mnt_file {
 					ask neighbour_cells_al {do compute_water_altitude;	}
 																					
 					//The water of the cells will flow to the neighbour cells which have a height less than the height of the actual cell
-					flow_cells <- (neighbour_cells_al where ((self.water_altitude > each.water_altitude) and (self.water_altitude > (each.altitude+each.obstacle_height-each.river_depth))));					
+					flow_cells <- (neighbour_cells_al where ((self.water_altitude > each.water_altitude) and (self.water_altitude > (each.altitude+each.dyke_height-each.river_depth))));					
 				//If there are cells, we compute the water flowing
 					if (!empty(flow_cells)) {			
 						
@@ -2086,7 +2074,7 @@ grid cell neighbors: 8 file: mnt_file {
 				volume_distrib<-water_volume;
 				if (!empty(neighbour_cells_al)) {
 					ask neighbour_cells_al {do compute_water_altitude;	}
-					flow_cells <- (neighbour_cells_al where ((self.water_altitude > each.water_altitude) and (self.water_altitude > (each.altitude+each.obstacle_height-each.river_depth))));					
+					flow_cells <- (neighbour_cells_al where ((self.water_altitude > each.water_altitude) and (self.water_altitude > (each.altitude+each.dyke_height-each.river_depth))));					
 					if (!empty(flow_cells)) {			
 						is_flowed<-true;
 						float prop_flow;
@@ -2105,6 +2093,7 @@ grid cell neighbors: 8 file: mnt_file {
 		already <- true;
 		if is_sea {	water_height <- 0.0;}
 }
+
 
 
 	//Update the color of the cell
@@ -2142,17 +2131,29 @@ grid cell neighbors: 8 file: mnt_file {
 		
 		if water_river_height>5#cm and !is_sea {color <- #deepskyblue;}
 		
+	//	if is_dyke{color<-#darkcyan;	}
 		if water_height>5#cm and !(flooded_cell contains(self)) and !is_sea {add self to:flooded_cell;}
 		if flooded_cell contains(self) {color <- #blue;}
 	}
 
 	aspect default {
-		if display_grid {
-			draw shape  depth:altitude+water_height color: color border: #black;
-		}
+			if is_dyke{	draw rectangle(15#m,3#m) depth:dyke_height color:#darkcyan;	}
+		if display_grid {			draw shape  depth:altitude+water_height color: color border: #black;	}
+		if (build >= 0) {draw image_file(images[build]) size:{shape.width * 0.5,shape.height * 0.5} ;	}
 
 	}
 
+}
+
+/********************************************************************** */
+grid button width:2 height:2 
+{
+	int id <- int(self);
+	rgb bord_col<-#black;
+	aspect normal {
+		draw rectangle(shape.width * 0.8,shape.height * 0.8).contour + (shape.height * 0.01) color: bord_col;
+		draw image_file(images[id]) size:{shape.width * 0.5,shape.height * 0.5} ;
+	}
 }
 
 //***********************************************************************************************************
@@ -2177,11 +2178,10 @@ experiment "go_flood" type: gui {
 			agents active_cells value: active_cells;
 			species green_area;		
 	//		grid cell elevation: grid_value triangulation:false ;
-			grid cell  triangulation:false ;
+			grid cell  triangulation:false refresh: true;
 			species building;
 			species road refresh: false;
 			species river refresh: false;
-		//	species canal refresh: false;
 			species people;
 			species car;
 		//	species spe_riv;
@@ -2238,6 +2238,33 @@ experiment "go_flood" type: gui {
 	}
 	
 	}
+	
+	
+	experiment Interation type: gui {
+	output {
+			layout horizontal([0.0::7285,1::2715]) tabs:true;
+		display map type: opengl background: #black draw_env: false{
+			agents active_cells value: active_cells refresh: true;
+			species green_area;		
+			grid cell  triangulation:false refresh: true;
+			species building;
+			species road;
+			species river;
+			species people;
+			species car;
+			event mouse_down action:cell_management;
+			
+		}
+		//display the action buttons
+		display action_buton background:#black name:"Tools panel"  	{
+			species button aspect:normal ;
+			event mouse_down action:activate_act;    
+		}
+	}
+}
+	
+	
+	
 	
 	/*
 	experiment 'test flood gui'  {
