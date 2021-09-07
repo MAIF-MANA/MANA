@@ -119,7 +119,7 @@ global {
 	float time_flood_test<-2#h;
 	bool scen<-false;      //active ou desactive l'écran de selection des scnéario
 	bool creator_mode<-true;
-	bool only_flood<-true;
+	bool only_flood<-false;
 	int model_flow<-1; //1: siflo, 2:simplified, 3:other simplified
 	float rain_intensity_test<-1.04 #cm;
 	float water_input_test<-5*10^7#m3/#h;
@@ -869,10 +869,10 @@ ask cell where (each.is_dyke and each.water_height>1#m) {do breaking_dyke;}
 	
 	//images used for the buttons
 	list<file> images <- [
-		file("../images/dyke.jpg"),
+		file("../images/digue.png"),
 		file("../images/building.jpg"),
 		file("../images/building_demol.png"),
-		file("../images/eraser.png")
+		file("../images/alarm.jpg")
 	]; 
 	
 	action activate_act {
@@ -888,44 +888,58 @@ ask cell where (each.is_dyke and each.water_height>1#m) {do breaking_dyke;}
 				}
 				
 			}
+			if action_type=3 {
+				write "waaaaaoooooooouhhhhhh waaaaouhhhhhhh";
+				ask people {do add_belief(water_is_coming);	}
+			}
 		}
 	}
 
 	action cell_management {
 		cell selected_cell <- first(cell overlapping (circle(1.0) at_location #user_location));
+		building selected_building<- first(building overlapping (circle(1.0) at_location #user_location));
 		if(selected_cell != nil) {
 			ask selected_cell {
-				if action_type=0 {	
+				if action_type=0 {	//dyke
 					do create_dyke;		
 					write ("new dyke : " +name);
 				}
 				
-				if action_type=1 {	
-					write ("Under construction");
+				if action_type=1 {	//building construction
+					write ("construction complete");
+					create building {
+						shape<-square (15#m);
+						location<-myself.location;
+						category<-0;
+					}
+					
+					
 				}
 				
-				if action_type=2 {	
-					write ("Under construction");
-				}
-				
+		 
 				if action_type=3 {	
 					write ("Under construction");
 				}
 				
-				
-				
-			/*	build <- action_type;
-				switch action_type {
-					match 0 {color <- #red;}
-					match 1 {color <- #white;}
-					match 2 {color <- #yellow;}
-					match 3 {color <- #black; build <- -1;}
-				}*/
+		
 			}
 		}
+		
+		
+			if(selected_building != nil) {
+			ask selected_building {
+				if action_type=2 {	//demolish
+						
+					write ("demolition complete");
+					do die;	
+				}
+				
+				}
 	}
 
 
+
+}
 
 }
 //***************************  END of GLOBAL **********************************************************************
@@ -1823,7 +1837,7 @@ grid cell neighbors: 8 file: mnt_file {
 	int build <- -1;
 
 	
-	user_command "change color"action:create_dyke;
+	user_command "create dyk"action:create_dyke;
 	
 	action create_dyke {
 	is_dyke<-true;
@@ -2160,14 +2174,14 @@ grid button width:2 height:2
 //***************************  OUTPUT  **********************************************************************
 //***********************************************************************************************************
 
-experiment benchmark type: gui autorun:true {
+experiment Benchmark type: gui autorun:true {
 	action _init_ {
 		create simulation with:(benchmark: true, scen:false, verbose:false);
 	}
 	
 }
 
-experiment "go_flood" type: gui {
+experiment "Simulation" type: gui {
 //	parameter "scenario" var:scenario ;
 //	parameter "type_explo" var:type_explo;
 	
