@@ -79,7 +79,6 @@ global {
 	int injuried_people_inside;
 	int injuried_people_outside;
 		
-	bool display_grid <- false parameter: true;
 	bool end_simul<-false;
 	int leaving_people <- 0;
 	int dead_people_inside <- 0;
@@ -119,11 +118,12 @@ global {
 	float time_flood_test<-2#h;
 	bool scen<-false;      //active ou desactive l'écran de selection des scnéario
 	bool creator_mode<-true;
-	bool only_flood<-false;
-	int model_flow<-1; //1: siflo, 2:simplified, 3:other simplified
+	bool only_flood<-true;
+	int model_flow<-2; //1: siflo, 2:simplified, 3:other simplified
 	float rain_intensity_test<-1.04 #cm;
 	float water_input_test<-5*10^7#m3/#h;
-
+	
+	bool plu_mod<-false;
 	list<rgb> color_category <- [ #darkgrey, #gold];
 	
 	map<people,string> injured_how;
@@ -941,6 +941,19 @@ ask cell where (each.is_dyke and each.water_height>1#m) {do breaking_dyke;}
 
 }
 
+	user_command "visualisation plu/relief" action:vizu_chnge;
+	
+	action vizu_chnge {
+		if plu_mod {
+			plu_mod<-false;
+			ask cell {do update_color;}
+		}
+		else {
+			plu_mod<-true;
+			ask cell {do see_plu;}
+		}
+	}
+
 }
 //***************************  END of GLOBAL **********************************************************************
 
@@ -974,11 +987,12 @@ aspect default {
 //***************************  GREEN AREA   **********************************************************************
 //***********************************************************************************************************
 species green_area {
-	rgb color <- #green;
+	rgb color <- rgb(0,128,0,0.35);
 	list<cell> my_cells;
 
 	aspect default {
 		draw shape color: color;
+		
 	}
 
 }
@@ -1038,21 +1052,7 @@ species river {
 
 }
 
-//***********************************************************************************************************
-//***************************  CANAL **********************************************************************
-//***********************************************************************************************************
-species canal {
-	list<cell> my_cells;
-	float depth;
-	cell canal_cell_origin;
-	cell canal_cell_destination;
-	float coeff_enter_canal;
 
-	aspect default {
-		draw shape color: #springgreen;
-	}
-
-}
 
 //***********************************************************************************************************
 //***************************  BUILDING **********************************************************************
@@ -1809,6 +1809,8 @@ grid cell neighbors: 8 file: mnt_file {
 	float river_broad<-0.0;
 	float river_depth<-0.0;
 	bool escape_cell;
+	rgb color_plu;
+	int plu_typ<-rnd(3);
 	
 	//dyke
 	float dyke_height<-0.0;
@@ -1834,15 +1836,23 @@ grid cell neighbors: 8 file: mnt_file {
 	float volume_distrib_cell;
 	bool is_flowed<-false;
 	
-	int build <- -1;
 
 	
 	user_command "create dyk"action:create_dyke;
+
 	
 	action create_dyke {
 	is_dyke<-true;
 	dyke_height<-2#m;
 	}
+	
+	action see_plu {
+	if plu_typ=0 {color_plu<-#grey;}
+	if plu_typ=1 {color_plu<-#yellow;}
+	if plu_typ=2 {color_plu<-#green;}
+	if plu_typ=3 or is_sea {color_plu<-#blue;}
+	}
+	
 	
 	//Reflex to break the dynamic of the water
 	action breaking_dyke{
@@ -2150,17 +2160,20 @@ grid cell neighbors: 8 file: mnt_file {
 		if flooded_cell contains(self) {color <- #blue;}
 	}
 
-	aspect default {
-			if is_dyke{	draw rectangle(15#m,3#m) depth:dyke_height color:#darkcyan;	}
-		if display_grid {			draw shape  depth:altitude+water_height color: color border: #black;	}
-		if (build >= 0) {draw image_file(images[build]) size:{shape.width * 0.5,shape.height * 0.5} ;	}
+	aspect map {
+	
+		if is_dyke{	draw rectangle(sqrt(cell_area)#m,3#m) depth:dyke_height color:#darkcyan;	}
+	//	if !plu_mod {draw shape  depth:altitude+water_height color: color border: #black;	}
+		if !plu_mod {draw shape   color: color ;	}
+		else {draw shape color: color_plu;	}
+		
 
 	}
 
 }
 
 /********************************************************************** */
-grid button width:2 height:2 
+grid button width:2 height:3 
 {
 	int id <- int(self);
 	rgb bord_col<-#black;
@@ -2189,18 +2202,16 @@ experiment "Simulation" type: gui {
 		display map type: opengl background: #black draw_env: false {
 		//si vous voulez afficher le mnt
 			//image "../includes/background.png" transparency: 0.3 refresh: false;
-			agents active_cells value: active_cells;
-			species green_area;		
-	//		grid cell elevation: grid_value triangulation:false ;
-			grid cell  triangulation:false refresh: true;
+		//	agents active_cells value: active_cells;
+	
+			grid cell  triangulation:false refresh: true ;
+			species cell  refresh: true aspect:map;
+			species green_area;	
 			species building;
-			species road refresh: false;
-			species river refresh: false;
+			species road;
+			species river;
 			species people;
-			species car;
-		//	species spe_riv;
-			
-			
+			species car;			
 		}
 		/* 
 		display charts refresh: every(10 #mn) {
@@ -2257,10 +2268,9 @@ experiment "Simulation" type: gui {
 	experiment Interation type: gui {
 	output {
 			layout horizontal([0.0::7285,1::2715]) tabs:true;
-		display map type: opengl background: #black draw_env: false{
-			agents active_cells value: active_cells refresh: true;
-			species green_area;		
-			grid cell  triangulation:false refresh: true;
+		display map type: opengl background: #black draw_env: false refresh:true{
+			species cell  refresh: true aspect:map;
+			species green_area;	
 			species building;
 			species road;
 			species river;
