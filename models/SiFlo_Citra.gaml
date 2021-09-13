@@ -34,7 +34,10 @@ global {
 	shape_file wall_shape_file <- shape_file("../results/dikes_murets_classes.shp");
 	shape_file rain_net_shape_file <- shape_file("../results/pluvial_network.shp");
 	shape_file parking_shape_file <- shape_file("../results/parking.shp");
-	
+	shape_file plu_nat_shape_file <- shape_file("../results/PLU_N.shp");
+	shape_file plu_a_urb_shape_file <- shape_file("../results/PLU_AU.shp");
+	shape_file plu_agri_shape_file <- shape_file("../results/PLU_A.shp");
+	shape_file natura_shape_file <- shape_file("../results/NATURA_2000.shp");
 	
 	//shape_file population_shape_file <- shape_file("../includes/city_environment/population.shp");
 	
@@ -79,13 +82,10 @@ global {
 	int repeat_time;
 	float Vmax;
 	
-	int injuried_people_inside;
-	int injuried_people_outside;
-		
+
 	bool end_simul<-false;
 	int leaving_people <- 0;
-	int dead_people_inside <- 0;
-	int dead_people_outside <- 0;
+
 	
 	list<cell> flooded_cell;
 	int nb_flooded_cell;
@@ -134,20 +134,33 @@ global {
  
 
 //******************indicateurs *******************
-float environnement;
-float logement;
-float infrastructures;
-float economie;
-float politique;
-float bilan_humain;
-float bilan_materiel;
-float reconstruction;
-float sante;
-float social;
-float co2;
-float indemnisation;
-float document;
+float espace_vert; //nécessaire ?
+float ratio_espace_vert;
+float densite;
+float cout_vie;
+float invest_espace_public;
+int services;
+int commerces;
+int entreprise;
+float budget_env;
+float entretien_reseau_plu;
+int dead_people_inside <- 0;
+int dead_people_outside <- 0;
+int injuried_people_inside;
+int injuried_people_outside;
+int flooded_building;
+float average_building_state;
+int flooded_car;
+float flooded_road;
+float delai_rep_reseaux;
+float delai_rep_bat;
+float taux_desimper; //nécessaire ?
+float taux_artificilisation;
+float satisfaction;
+float indem;
+float documents;
 float biodiversite;
+
 
 
 
@@ -230,9 +243,10 @@ float biodiversite;
 		do create_buildings_roads;
 		if verbose {write "Building and roads created: " + length(building);}
 		create institution;
-	
-		//do load_parameters;
 		
+		
+		//do load_parameters;
+
 		do create_natural_environment;
 		
 		
@@ -330,7 +344,6 @@ float biodiversite;
 			ask my_cells {
 				add myself to: my_buildings;
 				myself.my_neighbour_cells <- (myself.my_neighbour_cells + neighbors);
-				plu_typ<-0;
 			}
 			if category=0 {my_color <- #grey;}
 			if category=1 {my_color <- #yellow;}
@@ -346,7 +359,6 @@ float biodiversite;
 				do die;
 			}
 			my_cells <- cell overlapping self;
-			ask my_cells {plu_typ<-0;}
 		}
 		
 		create pluvial_network from: rain_net_shape_file{
@@ -366,7 +378,6 @@ float biodiversite;
 				do die;
 			}
 			my_cells <- cell overlapping self;
-			ask my_cells {plu_typ<-0;}
 		}
 				create road from: main_roads_shape_file{
 			category<-1;
@@ -375,7 +386,6 @@ float biodiversite;
 				do die;
 			}
 			my_cells <- cell overlapping self;
-		ask my_cells {plu_typ<-0;}
 		}
 		 
 		 create road from: highway_shape_file{
@@ -385,7 +395,6 @@ float biodiversite;
 				do die;
 			}
 			my_cells <- cell overlapping self;
-		ask my_cells {plu_typ<-0;}
 		}
 		 
 		 
@@ -421,11 +430,20 @@ float biodiversite;
 			my_cells <- cell overlapping self;
 			ask my_cells {
 				add myself to: my_green_areas;
-				plu_typ<-2;
 				
 			}
 		}
 		
+		create natura from: natura_shape_file {
+			if not (self overlaps world) {
+				do die;
+			}
+			my_cells <- cell overlapping self;
+			ask my_cells {
+				is_natura<-true;
+				
+			}
+		}
 		
 		
 		create sea from: sea_shape_file {
@@ -435,7 +453,6 @@ float biodiversite;
 			list<cell> my_cells <- cell overlapping self;
 			ask my_cells {
 				is_sea<-true;
-				plu_typ<-3;
 				
 			}
 		}
@@ -474,6 +491,7 @@ float biodiversite;
 
 		}
 		
+		
 	}
 	
 	action create_spe_riv {
@@ -499,6 +517,23 @@ float biodiversite;
 					river_broad<-river_broad/1.5;
 			}
 		}
+		
+		// 0: urbain, 1: a urbaniser, 2:agricole, 3:nat, 4:mer 
+		create PLU from:plu_a_urb_shape_file {category<-1;}
+		create PLU from:plu_agri_shape_file {category<-2;}
+		create PLU from:plu_nat_shape_file {category<-3;}
+
+	
+		ask PLU  {
+			ask cell overlapping self {
+				plu_typ<-myself.category;
+			}
+		}
+		ask cell where each.is_sea {
+			plu_typ<-4;
+		}
+		
+		
 	}
 	
 	action init_cells_and_bd_select {
@@ -600,9 +635,10 @@ float biodiversite;
 						list<parking> park_close<-parking where !each.is_full at_distance 300#m;
 						loop prk over:park_close {
 							if !is_parked {
-								location <- any_location_in(prk);
-								is_parked<-true;
+								add self to:prk.my_cars;
 								prk.nb_cars<-prk.nb_cars+1;
+								is_parked<-true;
+							//	location <-any_location_in(prk);
 								if prk.nb_cars=prk.capacity {prk.is_full<-true;}
 							}
 						}
@@ -619,6 +655,8 @@ float biodiversite;
 						}
 						}
 				}
+				
+				
 				if (cell(my_car.location) in active_cells) {
 					do add_belief(vulnerable_car);
 				}
@@ -635,6 +673,23 @@ float biodiversite;
 			do add_belief(evacuation_is_possible);
 		
 		}
+		
+			ask parking {
+			ask my_cars {is_parked<-false;}
+			int cars<-length(my_cars where (!each.is_parked));
+			loop g over: to_squares(shape, 4#m, false) {
+				 if cars>0 {
+					ask one_of(my_cars where (!each.is_parked)) {
+						is_parked<-true;
+						location <- g.location;
+						cars<-cars-1;
+						}
+					}
+				}
+				
+					
+				}
+		
 		nb_waiting <- length(people);
  		nb_people_begin<- length(people);
 		if verbose {write "People created: " + nb_people_begin;}	
@@ -681,6 +736,9 @@ float biodiversite;
 			if scenario="rivière élargie" {ask cell where (each.is_river) {river_broad<-river_broad+2#m;}	}
 	
 		}
+		
+	
+		
 	}
 	
 //***************************  END of INIT     **********************************************************************
@@ -695,9 +753,9 @@ float biodiversite;
 	
 	reflex update_flood when: every(#hour) {
 		float t; if benchmark {t <- machine_time;}
-		int flooded_building<-length(building where (each.serious_flood));
-		float average_building_state<-mean(building collect each.state);
-		int flooded_car<-length(car where (each.domaged));
+		flooded_building<-length(building where (each.serious_flood));
+		average_building_state<-mean(building collect each.state);
+		flooded_car<-length(car where (each.domaged));
 		float proba_know_rules<-one_of(institution).DICRIM_information;
 		float  river_broad<-one_of(river).river_broad;
 		float  river_depth<-one_of(river).river_depth;
@@ -950,22 +1008,38 @@ ask cell where (each.is_dyke and each.water_height>1#m) {do breaking_dyke;}
 
 action update_indicators {
 	//******************indicateurs *******************
-environnement<- length(cell  where (each.plu_typ=2))/length(cell  where (each.plu_typ=0)); //espace vet/espace urbain
+//environnement<- length(cell  where (each.plu_typ=2))/length(cell  where (each.plu_typ=0)); //espace vet/espace urbain
 
-/*logement;
-infrastructures;
-economie;
-politique;
-bilan_humain;
-bilan_materiel;
-reconstruction;
-sante;
-social; 
-co2;
-indemnisation;
-document;
-biodiversite;
-	*/
+//float espace_vert; //nécessaire ?
+ratio_espace_vert<-length(cell  where (each.plu_typ=2))/length(cell  where (each.plu_typ=0));
+densite<-length(people)/world.shape.area;
+//cout_vie
+// invest_espace_public;
+ services<-length(building where (each.category=2));
+// commerces;
+//entreprise;
+//budget_env
+taux_artificilisation<-(building sum_of (each.shape.area)+parking sum_of (each.shape.area)+road sum_of (each.shape.perimeter*4#m))/world.shape.area;
+
+/*float entreprise;
+float budget_env;
+float entretien_reseau_plu;
+int dead_people_inside <- 0;
+int dead_people_outside <- 0;
+int injuried_people_inside;
+int injuried_people_outside;
+int flooded_building;
+float average_building_state;
+int flooded_car;
+float flooded_road;
+float delai_rep_reseaux;
+float delai_rep_bat;
+float taux_desimper; //nécessaire ?
+float taux_artificilisation;
+float satisfaction;
+float indem;
+float documents;
+float biodiversite;*/
 }
 
 //******************************** USER COMMAND ****************************************
@@ -1131,6 +1205,19 @@ species green_area {
 }
 
 
+//***********************************************************************************************************
+//***************************  NATURA2000   **********************************************************************
+//***********************************************************************************************************
+species natura {
+	rgb color <- rgb(0,50,0,0.3);
+	list<cell> my_cells;
+
+	aspect default {
+		draw shape color: color;
+		
+	}
+
+}
 
 
 //***********************************************************************************************************
@@ -1142,6 +1229,7 @@ species parking {
 	bool is_full<-false;
 	int capacity<-round(shape.area/15#m2);
 	int nb_cars;
+	list<car> my_cars;
 	
 	aspect default {
 		draw shape color: color;
@@ -1329,7 +1417,7 @@ species car {
 		
 	}
 	aspect default {
-		draw rectangle(3 #m, 2#m) depth: 4 color: my_color ;
+		draw rectangle(3 #m, 2#m) depth:1.5#m color: my_color ;
 	}
 	
 	
@@ -1348,7 +1436,13 @@ species institution {
 }
 
 
-
+//***********************************************************************************************************
+//***************************  PLU **********************************************************************
+//***********************************************************************************************************
+species PLU {
+	int category; 	// 0: urbain, 1: a urbaniser, 2:agricole, 3:nat, 4:mer 
+	
+}
 
 
 //***********************************************************************************************************
@@ -1955,7 +2049,7 @@ species people skills: [moving] control:  simple_bdi {
 
 	//***************************  APPARENCE  ********************************************************
 	aspect default {
-		draw cylinder(1 #m, 5 #m) color: my_color;
+		draw cylinder(1 #m, 3 #m) color: my_color;
 	}
 
 }
@@ -1965,13 +2059,13 @@ species people skills: [moving] control:  simple_bdi {
 //*************************** OBSTACLE **********************************************************************
 //***********************************************************************************************************
 species obstacle {
-	float height <- 1#m;
+	float height <- 2#m;
 	int resistance<-2;
 	rgb color<-#violet;
 	bool is_destroyed<-false;
 
 		aspect default {
-		draw shape  color: color at:location+{0,0,height};
+		draw shape+(0.5,10,#flat)  depth:height color: color at:location+{0,0,height};
 	}
 	
 }
@@ -1990,6 +2084,7 @@ grid cell neighbors: 8 file: mnt_file {
 	bool is_river_full<-false;
 	bool is_sea <- false;
 	bool is_dyke<-false;
+	bool is_natura<-false;
 	bool already;
 	float water_cell_altitude;
 	float river_altitude;
@@ -2003,7 +2098,7 @@ grid cell neighbors: 8 file: mnt_file {
 	float river_depth<-0.0;
 	bool escape_cell;
 	rgb color_plu;
-	int plu_typ<-1; // 0: urbain, 1:agricole, 2:nat, 3:mer 
+	int plu_typ<-0; // 0: urbain, 1: a urbaniser, 2:agricole, 3:nat, 4:mer 
 	
 	//dyke
 	float dyke_height<-0.0;
@@ -2035,11 +2130,13 @@ grid cell neighbors: 8 file: mnt_file {
 
 	
 	action see_plu {
-	if plu_typ=0 {color_plu<-#grey;}
-	if plu_typ=1 {color_plu<-#yellow;}
-	if plu_typ=2 {color_plu<-#green;}
-	if plu_typ=3 or is_sea {color_plu<-#blue;}
+	if plu_typ=0 {color_plu<-#darkgrey;}
+	if plu_typ=1 {color_plu<-#grey;}
+	if plu_typ=2 {color_plu<-#yellow;}
+	if plu_typ=3 {color_plu<-#green;}
+	if plu_typ=4  {color_plu<-#blue;}
 	}
+	// 0: urbain, 1: a urbaniser, 2:agricole, 3:nat, 4:mer 
 	
 	
 	//Reflex to break the dynamic of the water
@@ -2396,6 +2493,7 @@ experiment "Simulation" type: gui {
 			grid cell  triangulation:false refresh: true ;
 			species cell  refresh: true aspect:map;
 			species green_area;	
+			species natura;
 			species parking;
 			species building;
 			species road;
@@ -2461,7 +2559,8 @@ experiment "Simulation" type: gui {
 			layout horizontal([0.0::7285,1::2715]) tabs:true;
 		display map type: opengl background: #black draw_env: false refresh:true{
 			species cell  refresh: true aspect:map;
-			species green_area;	
+			species green_area;
+			species natura;	
 			species parking;
 			species building;
 			species road;
