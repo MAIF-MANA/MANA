@@ -22,15 +22,18 @@ global {
 	shape_file res_buildings_shape_file <- shape_file("../results/residential_building.shp");
 	shape_file market_shape_file <- shape_file("../results/market.shp");
 	shape_file erp_shape_file <- shape_file("../results/erp.shp");
-	/*shape_file main_roads_shape_file <- shape_file("../results/main_road.shp");
-	shape_file city_roads_shape_file <- shape_file("../results/city_roads_separees.shp");
-	shape_file highway_shape_file <- shape_file("../results/highway.shp");*/
-	shape_file roads_shape_file <- shape_file("../results/roads.shp");
+	shape_file main_roads_shape_file <- shape_file("../results/main_road.shp");
+	shape_file roads_shape_file <- shape_file("../results/city_roads.shp");
+	shape_file highway_shape_file <- shape_file("../results/highway.shp");
+	//shape_file roads_shape_file <- shape_file("../results/roads.shp");
 	shape_file waterways_shape_file <- shape_file("../results/river.shp");
 	shape_file green_shape_file <- shape_file("../results/green_area.shp");
 	shape_file sea_shape_file <- shape_file("../results/sea.shp");
 	shape_file bridge_shape_file <- shape_file("../results/passage_pont.shp");
 	shape_file ground_shape_file <- shape_file("../results/riviere_enterree.shp");
+	shape_file wall_shape_file <- shape_file("../results/dikes_murets_classes.shp");
+	shape_file rain_net_shape_file <- shape_file("../results/pluvial_network.shp");
+	shape_file parking_shape_file <- shape_file("../results/parking.shp");
 	
 	
 	//shape_file population_shape_file <- shape_file("../includes/city_environment/population.shp");
@@ -124,11 +127,30 @@ global {
 	float water_input_test<-5*10^7#m3/#h;
 	
 	bool plu_mod<-false;
-	list<rgb> color_category <- [ #darkgrey, #gold];
+	list<rgb> color_category <- [ #darkgrey, #gold, #red];
 	
 	map<people,string> injured_how;
 	map<people,string> dead_how;
  
+
+//******************indicateurs *******************
+float environnement;
+float logement;
+float infrastructures;
+float economie;
+float politique;
+float bilan_humain;
+float bilan_materiel;
+float reconstruction;
+float sante;
+float social;
+float co2;
+float indemnisation;
+float document;
+float biodiversite;
+
+
+
 
 //***************************  PREDICAT and EMOTIONS  ********************************************************
 	//beliefs*******************************************************
@@ -286,6 +308,7 @@ global {
 
 		}
 		
+		
 		create building from: market_shape_file {
 			category<-1;
 			if not (self overlaps world) {
@@ -307,7 +330,7 @@ global {
 			ask my_cells {
 				add myself to: my_buildings;
 				myself.my_neighbour_cells <- (myself.my_neighbour_cells + neighbors);
-
+				plu_typ<-0;
 			}
 			if category=0 {my_color <- #grey;}
 			if category=1 {my_color <- #yellow;}
@@ -316,14 +339,63 @@ global {
 			altitude <- (my_cells mean_of (each.grid_value));
 			my_location <- location + point(0, 0, altitude + 1 #m);
 		}
-		create road from: roads_shape_file{
-			color<-color_category[category];
+		
+		
+				create parking from: parking_shape_file {
+			if not (self overlaps world) {
+				do die;
+			}
+			my_cells <- cell overlapping self;
+			ask my_cells {plu_typ<-0;}
+		}
+		
+		create pluvial_network from: rain_net_shape_file{
 			if not (self overlaps world) {
 				do die;
 			}
 			my_cells <- cell overlapping self;
 		}
 		
+		
+		
+		
+		create road from: roads_shape_file{
+			category<-0;
+			color<-color_category[category];
+			if not (self overlaps world) {
+				do die;
+			}
+			my_cells <- cell overlapping self;
+			ask my_cells {plu_typ<-0;}
+		}
+				create road from: main_roads_shape_file{
+			category<-1;
+			color<-color_category[category];
+			if not (self overlaps world) {
+				do die;
+			}
+			my_cells <- cell overlapping self;
+		ask my_cells {plu_typ<-0;}
+		}
+		 
+		 create road from: highway_shape_file{
+			category<-2;
+			color<-color_category[category];
+			if not (self overlaps world) {
+				do die;
+			}
+			my_cells <- cell overlapping self;
+		ask my_cells {plu_typ<-0;}
+		}
+		 
+		 
+		  create obstacle from: wall_shape_file{
+			ask cell overlapping self {
+					is_dyke<-true;
+					dyke_height<-myself.height;
+			}
+		}
+		 
 		 
 	}
 	action add_data_benchmark(string id, float val) {
@@ -349,9 +421,13 @@ global {
 			my_cells <- cell overlapping self;
 			ask my_cells {
 				add myself to: my_green_areas;
+				plu_typ<-2;
 				
 			}
 		}
+		
+		
+		
 		create sea from: sea_shape_file {
 			if not (self overlaps world) {
 				do die;
@@ -359,6 +435,7 @@ global {
 			list<cell> my_cells <- cell overlapping self;
 			ask my_cells {
 				is_sea<-true;
+				plu_typ<-3;
 				
 			}
 		}
@@ -861,11 +938,33 @@ ask cell where (each.is_dyke and each.water_height>1#m) {do breaking_dyke;}
 
 
 
+action update_indicators {
+	//******************indicateurs *******************
+environnement<- length(cell  where (each.plu_typ=2))/length(cell  where (each.plu_typ=0)); //espace vet/espace urbain
+
+/*logement;
+infrastructures;
+economie;
+politique;
+bilan_humain;
+bilan_materiel;
+reconstruction;
+sante;
+social; 
+co2;
+indemnisation;
+document;
+biodiversite;
+	*/
+}
+
 //******************************** USER COMMAND ****************************************
 
 
 	//current action type
 	int action_type <- -1;	
+	bool second_point<-false;
+	point first_location;
 	
 	//images used for the buttons
 	list<file> images <- [
@@ -898,13 +997,13 @@ ask cell where (each.is_dyke and each.water_height>1#m) {do breaking_dyke;}
 	action cell_management {
 		cell selected_cell <- first(cell overlapping (circle(1.0) at_location #user_location));
 		building selected_building<- first(building overlapping (circle(1.0) at_location #user_location));
+		
+		if action_type=0 {	//dyke
+					do create_obstacle;		
+				//	write ("new dyke : " +name);
+				}
 		if(selected_cell != nil) {
 			ask selected_cell {
-				if action_type=0 {	//dyke
-					do create_dyke;		
-					write ("new dyke : " +name);
-				}
-				
 				if action_type=1 {	//building construction
 					write ("construction complete");
 					create building {
@@ -928,8 +1027,7 @@ ask cell where (each.is_dyke and each.water_height>1#m) {do breaking_dyke;}
 		
 			if(selected_building != nil) {
 			ask selected_building {
-				if action_type=2 {	//demolish
-						
+				if action_type=2 {	//demolish		
 					write ("demolition complete");
 					do die;	
 				}
@@ -940,6 +1038,29 @@ ask cell where (each.is_dyke and each.water_height>1#m) {do breaking_dyke;}
 
 
 }
+
+action create_obstacle {
+		
+		if action_type=0 and second_point{	//dyke
+					geometry line_dyke<-line(first_location,#user_location);	
+					create obstacle {shape<-line_dyke;	
+					ask cell overlapping self {
+						is_dyke<-true;
+						dyke_height<-myself.height;
+							}
+					}	
+						write ("digue créée ");
+				}
+				
+			if action_type=0 and !second_point{	//dyke
+					first_location<-#user_location;	
+					write ("choose another point ");
+				}
+				
+			if 	second_point{second_point<-false;}
+			else {second_point<-true;}
+}
+
 
 	user_command "visualisation plu/relief" action:vizu_chnge;
 	
@@ -983,6 +1104,8 @@ aspect default {
 
 
 
+
+
 //***********************************************************************************************************
 //***************************  GREEN AREA   **********************************************************************
 //***********************************************************************************************************
@@ -996,6 +1119,25 @@ species green_area {
 	}
 
 }
+
+
+
+
+//***********************************************************************************************************
+//***************************  PARKING   **********************************************************************
+//***********************************************************************************************************
+species parking {
+	rgb color <- #grey;
+	list<cell> my_cells;
+
+	aspect default {
+		draw shape color: color;
+		
+	}
+
+}
+
+
 
 //***********************************************************************************************************
 //***************************  ROAD    **********************************************************************
@@ -1052,6 +1194,24 @@ species river {
 
 }
 
+
+//***********************************************************************************************************
+//***************************  PLUVIAL NETWORK    **********************************************************************
+//***********************************************************************************************************
+species pluvial_network {
+	rgb color <- #darkblue;
+	string type;
+	list<cell> my_cells;
+	float water_height <- 0 #m;
+	float altitude;
+	point my_location;
+	float area_capacity<-1#m2;
+
+	aspect default {
+		draw shape color: color;
+	}
+
+}
 
 
 //***********************************************************************************************************
@@ -1172,6 +1332,8 @@ species institution {
 	bool river_maintenance<-true;
 	
 }
+
+
 
 
 
@@ -1784,6 +1946,23 @@ species people skills: [moving] control:  simple_bdi {
 
 }
 
+
+//***********************************************************************************************************
+//*************************** OBSTACLE **********************************************************************
+//***********************************************************************************************************
+species obstacle {
+	float height <- 1#m;
+	int resistance<-2;
+	rgb color<-#violet;
+	bool is_destroyed<-false;
+
+		aspect default {
+		draw shape  color: color at:location+{0,0,height};
+	}
+	
+}
+
+
 //***********************************************************************************************************
 //***************************  CELL     **********************************************************************
 //***********************************************************************************************************
@@ -1810,12 +1989,12 @@ grid cell neighbors: 8 file: mnt_file {
 	float river_depth<-0.0;
 	bool escape_cell;
 	rgb color_plu;
-	int plu_typ<-rnd(3);
+	int plu_typ<-1; // 0: urbain, 1:agricole, 2:nat, 3:mer 
 	
 	//dyke
 	float dyke_height<-0.0;
 	float water_pressure ;  //from 0 (no pressure) to 1 (max pressure)
-	float breaking_probability<-0.001; //we assume that this is the probability of breaking with max pressure for each min
+	float breaking_probability<-0.01; //we assume that this is the probability of breaking with max pressure for each min
 	
 	
 	
@@ -1837,14 +2016,9 @@ grid cell neighbors: 8 file: mnt_file {
 	bool is_flowed<-false;
 	
 
-	
-	user_command "create dyk"action:create_dyke;
 
-	
-	action create_dyke {
-	is_dyke<-true;
-	dyke_height<-2#m;
-	}
+
+
 	
 	action see_plu {
 	if plu_typ=0 {color_plu<-#grey;}
@@ -1862,6 +2036,7 @@ grid cell neighbors: 8 file: mnt_file {
 					if flip(breaking_probability*water_pressure) {
 						is_dyke<-false;
 						dyke_height<-0#m;
+						//ask obstacle overlaping myself {} à faire
 					}
 					timing<-timing-1;
 		}
@@ -2162,7 +2337,7 @@ grid cell neighbors: 8 file: mnt_file {
 
 	aspect map {
 	
-		if is_dyke{	draw rectangle(sqrt(cell_area)#m,3#m) depth:dyke_height color:#darkcyan;	}
+//		if is_dyke{	draw rectangle(sqrt(cell_area)#m,3#m) depth:dyke_height rotate:45 color:#darkcyan;	}
 	//	if !plu_mod {draw shape  depth:altitude+water_height color: color border: #black;	}
 		if !plu_mod {draw shape   color: color ;	}
 		else {draw shape color: color_plu;	}
@@ -2207,8 +2382,10 @@ experiment "Simulation" type: gui {
 			grid cell  triangulation:false refresh: true ;
 			species cell  refresh: true aspect:map;
 			species green_area;	
+			species parking;
 			species building;
 			species road;
+			species obstacle;
 			species river;
 			species people;
 			species car;			
@@ -2271,9 +2448,12 @@ experiment "Simulation" type: gui {
 		display map type: opengl background: #black draw_env: false refresh:true{
 			species cell  refresh: true aspect:map;
 			species green_area;	
+			species parking;
 			species building;
 			species road;
+			species obstacle;
 			species river;
+			species pluvial_network;
 			species people;
 			species car;
 			event mouse_down action:cell_management;
