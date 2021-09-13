@@ -121,7 +121,7 @@ global {
 	float time_flood_test<-2#h;
 	bool scen<-false;      //active ou desactive l'écran de selection des scnéario
 	bool creator_mode<-true;
-	bool only_flood<-true;
+	bool only_flood<-false;
 	int model_flow<-2; //1: siflo, 2:simplified, 3:other simplified
 	float rain_intensity_test<-1.04 #cm;
 	float water_input_test<-5*10^7#m3/#h;
@@ -596,17 +596,27 @@ float biodiversite;
 					location <- myself.location;
 					float dist <- 100 #m;
 					using topology(world) {
-						list<road> roads_neigh <- (road at_distance dist);
+
+						list<parking> park_close<-parking where !each.is_full at_distance 300#m;
+						loop prk over:park_close {
+							if !is_parked {
+								location <- any_location_in(prk);
+								is_parked<-true;
+								prk.nb_cars<-prk.nb_cars+1;
+								if prk.nb_cars=prk.capacity {prk.is_full<-true;}
+							}
+						}
+						if !is_parked {
+						list<road> roads_neigh <- (road where (each.category<2) at_distance dist);
 						loop while: empty(roads_neigh) {
 							dist <- dist + 50;
 							roads_neigh <- (road at_distance dist);
 						}
-						
 						road a_road <- roads_neigh[rnd_choice(roads_neigh collect each.shape.perimeter)];
 						location <- any_location_in(a_road);
-						
 						my_owner.heading <- first(a_road.shape.points) towards last(a_road.shape.points);
-					
+						is_parked<-true;
+						}
 						}
 				}
 				if (cell(my_car.location) in active_cells) {
@@ -1129,7 +1139,10 @@ species green_area {
 species parking {
 	rgb color <- #grey;
 	list<cell> my_cells;
-
+	bool is_full<-false;
+	int capacity<-round(shape.area/15#m2);
+	int nb_cars;
+	
 	aspect default {
 		draw shape color: color;
 		
@@ -1296,6 +1309,7 @@ species car {
 	bool domaged<-false;
 	float problem_water_height<-(10+rnd(20))#cm;
 	bool usable<-true;
+	bool is_parked<-false;
 	
 	init {
 		do define_cell;
@@ -1315,7 +1329,7 @@ species car {
 		
 	}
 	aspect default {
-		draw rectangle(5 #m, 3#m) depth: 4 color: my_color ;
+		draw rectangle(3 #m, 2#m) depth: 4 color: my_color ;
 	}
 	
 	
