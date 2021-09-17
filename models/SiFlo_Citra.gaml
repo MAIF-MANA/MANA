@@ -64,9 +64,9 @@ global {
 	float max_impermeability_building_increase <- 0.2;
 	bool display_river <- true;
 	bool display_water <- true;
-	float max_distance_to_river <-3000#m;
+	float max_distance_to_river <-5000#m;
 	float time_step <- 30 #sec; //0.2#mn;  
-	float time_simulation<-3#h;
+	
 		
 	float water_height_perception <- 15 #cm;
 	float water_height_danger_inside_energy_on <- 20 #cm;
@@ -117,13 +117,16 @@ global {
 	//string type_explo <- "normal" among: ["normal", "stochasticity"];
 	bool rain<-true;
 	bool water_input<-true;
-	bool water_test<-false;
+	bool water_test<-true;
+	
 	float time_flood_test<-2#h;
+	float time_simulation<-5#h;
+	
 	bool scen<-false;      //active ou desactive l'écran de selection des scnéario
 	bool creator_mode<-true;
-	bool only_flood<-false;
+	bool only_flood<-true;
 	int model_flow<-2; //1: siflo, 2:simplified, 3:other simplified
-	float rain_intensity_test<-1.04 #cm;
+	float rain_intensity_test<-1 #cm;
 	float water_input_test<-5*10^7#m3/#h;
 	
 	bool plu_mod<-false;
@@ -813,7 +816,7 @@ ask cell where (each.is_dyke and each.water_height>1#m) {do breaking_dyke;}
 		float hmax<-cell max_of(each.water_height);
 		Vmax<-0.0;
 		if rain {
-			ask active_cells {
+			ask cell where !each.is_sea {
 			 	float rain_intensity <- float(data_rain[0, increment]) #mm;
 				 rain_intensity <- rain_intensity_test;
 				water_height<-water_height+rain_intensity*step/1#h;
@@ -901,10 +904,13 @@ ask cell where (each.is_dyke and each.water_height>1#m) {do breaking_dyke;}
 		float hmax<-cell max_of(each.water_height);
 		Vmax<-0.0;
 		if rain {
-			ask active_cells {
+			
+			ask active_cells parallel: parallel_computation {
 			 	float rain_intensity <- float(data_rain[0, increment]) #mm;
 				 rain_intensity <- rain_intensity_test;
 				water_height<-water_height+rain_intensity*step/1#h;
+				 	water_volume<-water_height*cell_area;
+					do compute_water_altitude;
 	
 			}
 		
@@ -2408,42 +2414,33 @@ grid cell neighbors: 8 file: mnt_file {
 
 	//Update the color of the cell
 	action update_color {
-		if water_river_height>0.01 #m {color <-#wheat;}
-		if water_river_height>0.5*river_depth {color <-#orange;}
-		if is_river_full  {color <-#red;}
+		if (!is_sea) {color<-rgb(int(min([255,max([245 - 0.8 *altitude, 0])])), int(min([255,max([245 - 1.2 *altitude, 0])])), int(min([255,max([0,220 - 2 * altitude])])));}
+	
 		int val_water <- 0;
-				if is_river {
-			color <- #deepskyblue;
-		}
+
 		
 			/* 	if is_canal {
 			color <- #mediumseagreen;
 		}*/
 		
+		if water_height>5#cm {
 		val_water <- max([0, min([255, int(255 * (1 - (water_height / 10#cm)))])]);
 		color <- rgb([val_water, val_water, 255]);
-
-		if is_sea {
-			color <- #gamablue;
 		}
 		
-		/* 	
-		
-				if is_canal {
-			color <- #mediumseagreen;
-		}*/
-		
-		
+		if !is_river_full and water_river_height>1#cm  {color <-#deepskyblue;}
 		if (is_sea) {color<-# blue;}
-		if (is_river) {color<-# lightblue;}
-		if (!is_sea) {color<-rgb(int(min([255,max([245 - 0.8 *altitude, 0])])), int(min([255,max([245 - 1.2 *altitude, 0])])), int(min([255,max([0,220 - 2 * altitude])])));}
 		
+		
+		
+	/*	if (is_river) {color<-# lightblue;}
+	
 		
 		if water_river_height>5#cm and !is_sea {color <- #deepskyblue;}
 		
 	//	if is_dyke{color<-#darkcyan;	}
 		if water_height>5#cm and !(flooded_cell contains(self)) and !is_sea {add self to:flooded_cell;}
-		if flooded_cell contains(self) {color <- #blue;}
+		if flooded_cell contains(self) {color <- #blue;} */
 	}
 
 	aspect map {
