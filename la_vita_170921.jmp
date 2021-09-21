@@ -1,0 +1,1506 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project>
+  <properties class="java.util.HashMap">
+    <mapping>
+      <key class="javax.xml.namespace.QName">Project Date</key>
+      <value class="java.lang.String">2021/09/17 13:08:01</value>
+    </mapping>
+    <mapping>
+      <key class="javax.xml.namespace.QName">Project File</key>
+      <value class="java.lang.String">C:\Users\annabelle.moatty\Desktop\Post-doc MANA\Dispositif MANA\la_vita_170921\la_vita_170921.jmp</value>
+    </mapping>
+  </properties>
+  <windowLocation X="0" Y="0" />
+  <windowSize width="1822" height="898" />
+  <windowZoom left="-1799.937296643832" right="3134.7541697962533" bottom="-1348.7373703497171" top="1329.4304791442835" />
+  <maximized>true</maximized>
+  <layers>
+    <category name="Travail">
+      <layer class="com.vividsolutions.jump.workbench.model.Layer" name="residential_building" visible="true" editable="false" selectable="true" read-only="false" drawnLast="false" synchronizedLineColor="true">
+        <scaleDependentRendering enabled="false">
+          <minScale null="true" />
+          <maxScale null="true" />
+        </scaleDependentRendering>
+        <description />
+        <data-source-query>
+          <query null="true" />
+          <data-source class="com.vividsolutions.jump.io.datasource.StandardReaderWriterFileDataSource$Shapefile">
+            <properties class="java.util.HashMap">
+              <mapping>
+                <key class="java.lang.String">DataSourceClassName</key>
+                <value class="java.lang.String">com.vividsolutions.jump.io.datasource.StandardReaderWriterFileDataSource$Shapefile</value>
+              </mapping>
+              <mapping>
+                <key class="java.lang.String">Uri</key>
+                <value class="java.lang.String">file:/C:/Users/annabelle.moatty/Desktop/Post-doc%20MANA/Dispositif%20MANA/la_vita_130921_Am/la_vita_130921_Am/residential_building.shp</value>
+              </mapping>
+              <mapping>
+                <key class="java.lang.String">File</key>
+                <value class="java.lang.String">C:\Users\annabelle.moatty\Desktop\Post-doc MANA\Dispositif MANA\la_vita_130921_Am\la_vita_130921_Am\residential_building.shp</value>
+              </mapping>
+            </properties>
+          </data-source>
+        </data-source-query>
+        <styles>
+          <style class="com.vividsolutions.jump.workbench.ui.renderer.style.BasicStyle" enabled="true">
+            <fill enabled="true">
+              <pattern null="true" enabled="false" />
+              <color>204, 255, 204, 255</color>
+            </fill>
+            <line enabled="true" width="1">
+              <pattern enabled="false">3</pattern>
+              <color>142, 178, 142, 255</color>
+            </line>
+            <alpha>150</alpha>
+          </style>
+          <style class="com.vividsolutions.jump.workbench.ui.renderer.style.SquareVertexStyle" enabled="false" size="4" filling="true" />
+          <style class="com.vividsolutions.jump.workbench.ui.renderer.style.LabelStyle" enabled="false">
+            <color>0, 0, 0, 255</color>
+            <attribute>$FID</attribute>
+            <angleAttribute />
+            <heightAttribute />
+            <font>Dialog, 0, 12</font>
+            <height>12.0</height>
+            <verticalAlignment>DEFAULT</verticalAlignment>
+            <scaled>false</scaled>
+            <overlappingLabelsHidden>true</overlappingLabelsHidden>
+            <outlineShowing>false</outlineShowing>
+            <outlineColor>230, 230, 230, 192</outlineColor>
+            <outlineWidth>4.0</outlineWidth>
+            <hideAtScale>false</hideAtScale>
+            <scaleToHideAt>20000.0</scaleToHideAt>
+            <horizontalAlignment>0</horizontalAlignment>
+            <horizontalPosition>CENTER</horizontalPosition>
+          </style>
+          <style class="com.vividsolutions.jump.workbench.ui.renderer.style.ColorThemingStyle" enabled="false" global-transparency-enabled="true" global-line-width-enabled="true" vertex-style-enabled="false">
+            <attribute-name null="true" />
+            <default-style enabled="true">
+              <fill enabled="true">
+                <pattern null="true" enabled="false" />
+                <color>192, 192, 192, 255</color>
+              </fill>
+              <line enabled="true" width="1">
+                <pattern enabled="false">3</pattern>
+                <color>134, 134, 134, 255</color>
+              </line>
+              <alpha>255</alpha>
+              <vertex-style class="com.vividsolutions.jump.workbench.ui.renderer.style.SquareVertexStyle" enabled="false" size="4" filling="true" />
+            </default-style>
+            <attribute-value-to-style-map class="java.util.HashMap" />
+            <attribute-value-to-label-map class="java.util.HashMap" />
+          </style>
+          <style class="org.openjump.core.ccordsys.srid.SRIDStyle" enabled="true" srid="0" />
+        </styles>
+        <feature-schema-operation>NULL</feature-schema-operation>
+      </layer>
+      <layer class="com.vividsolutions.jump.workbench.model.Layer" name="erp" visible="true" editable="false" selectable="true" read-only="false" drawnLast="false" synchronizedLineColor="true">
+        <scaleDependentRendering enabled="false">
+          <minScale null="true" />
+          <maxScale null="true" />
+        </scaleDependentRendering>
+        <description />
+        <data-source-query>
+          <query null="true" />
+          <data-source class="com.vividsolutions.jump.io.datasource.StandardReaderWriterFileDataSource$Shapefile">
+            <properties class="java.util.HashMap">
+              <mapping>
+                <key class="java.lang.String">DataSourceClassName</key>
+                <value class="java.lang.String">com.vividsolutions.jump.io.datasource.StandardReaderWriterFileDataSource$Shapefile</value>
+              </mapping>
+              <mapping>
+                <key class="java.lang.String">Uri</key>
+                <value class="java.lang.String">file:/C:/Users/annabelle.moatty/Desktop/Post-doc%20MANA/Dispositif%20MANA/la_vita_130921_Am/la_vita_130921_Am/erp.shp</value>
+              </mapping>
+              <mapping>
+                <key class="java.lang.String">File</key>
+                <value class="java.lang.String">C:\Users\annabelle.moatty\Desktop\Post-doc MANA\Dispositif MANA\la_vita_130921_Am\la_vita_130921_Am\erp.shp</value>
+              </mapping>
+            </properties>
+          </data-source>
+        </data-source-query>
+        <styles>
+          <style class="com.vividsolutions.jump.workbench.ui.renderer.style.BasicStyle" enabled="true">
+            <fill enabled="true">
+              <pattern null="true" enabled="false" />
+              <color>255, 0, 255, 255</color>
+            </fill>
+            <line enabled="true" width="1">
+              <pattern enabled="false">3</pattern>
+              <color>178, 0, 178, 255</color>
+            </line>
+            <alpha>150</alpha>
+          </style>
+          <style class="com.vividsolutions.jump.workbench.ui.renderer.style.SquareVertexStyle" enabled="false" size="4" filling="true" />
+          <style class="com.vividsolutions.jump.workbench.ui.renderer.style.LabelStyle" enabled="false">
+            <color>0, 0, 0, 255</color>
+            <attribute>$FID</attribute>
+            <angleAttribute />
+            <heightAttribute />
+            <font>Dialog, 0, 12</font>
+            <height>12.0</height>
+            <verticalAlignment>DEFAULT</verticalAlignment>
+            <scaled>false</scaled>
+            <overlappingLabelsHidden>true</overlappingLabelsHidden>
+            <outlineShowing>false</outlineShowing>
+            <outlineColor>230, 230, 230, 192</outlineColor>
+            <outlineWidth>4.0</outlineWidth>
+            <hideAtScale>false</hideAtScale>
+            <scaleToHideAt>20000.0</scaleToHideAt>
+            <horizontalAlignment>0</horizontalAlignment>
+            <horizontalPosition>CENTER</horizontalPosition>
+          </style>
+          <style class="com.vividsolutions.jump.workbench.ui.renderer.style.ColorThemingStyle" enabled="false" global-transparency-enabled="true" global-line-width-enabled="true" vertex-style-enabled="false">
+            <attribute-name null="true" />
+            <default-style enabled="true">
+              <fill enabled="true">
+                <pattern null="true" enabled="false" />
+                <color>192, 192, 192, 255</color>
+              </fill>
+              <line enabled="true" width="1">
+                <pattern enabled="false">3</pattern>
+                <color>134, 134, 134, 255</color>
+              </line>
+              <alpha>255</alpha>
+              <vertex-style class="com.vividsolutions.jump.workbench.ui.renderer.style.SquareVertexStyle" enabled="false" size="4" filling="true" />
+            </default-style>
+            <attribute-value-to-style-map class="java.util.HashMap" />
+            <attribute-value-to-label-map class="java.util.HashMap" />
+          </style>
+          <style class="org.openjump.core.ccordsys.srid.SRIDStyle" enabled="true" srid="0" />
+        </styles>
+        <feature-schema-operation>NULL</feature-schema-operation>
+      </layer>
+      <layer class="com.vividsolutions.jump.workbench.model.Layer" name="market" visible="true" editable="false" selectable="true" read-only="false" drawnLast="false" synchronizedLineColor="true">
+        <scaleDependentRendering enabled="false">
+          <minScale null="true" />
+          <maxScale null="true" />
+        </scaleDependentRendering>
+        <description />
+        <data-source-query>
+          <query null="true" />
+          <data-source class="com.vividsolutions.jump.io.datasource.StandardReaderWriterFileDataSource$Shapefile">
+            <properties class="java.util.HashMap">
+              <mapping>
+                <key class="java.lang.String">DataSourceClassName</key>
+                <value class="java.lang.String">com.vividsolutions.jump.io.datasource.StandardReaderWriterFileDataSource$Shapefile</value>
+              </mapping>
+              <mapping>
+                <key class="java.lang.String">Uri</key>
+                <value class="java.lang.String">file:/C:/Users/annabelle.moatty/Desktop/Post-doc%20MANA/Dispositif%20MANA/la_vita_130921_Am/la_vita_130921_Am/market.shp</value>
+              </mapping>
+              <mapping>
+                <key class="java.lang.String">File</key>
+                <value class="java.lang.String">C:\Users\annabelle.moatty\Desktop\Post-doc MANA\Dispositif MANA\la_vita_130921_Am\la_vita_130921_Am\market.shp</value>
+              </mapping>
+            </properties>
+          </data-source>
+        </data-source-query>
+        <styles>
+          <style class="com.vividsolutions.jump.workbench.ui.renderer.style.BasicStyle" enabled="true">
+            <fill enabled="true">
+              <pattern null="true" enabled="false" />
+              <color>0, 255, 0, 255</color>
+            </fill>
+            <line enabled="true" width="1">
+              <pattern enabled="false">3</pattern>
+              <color>0, 178, 0, 255</color>
+            </line>
+            <alpha>150</alpha>
+          </style>
+          <style class="com.vividsolutions.jump.workbench.ui.renderer.style.SquareVertexStyle" enabled="false" size="4" filling="true" />
+          <style class="com.vividsolutions.jump.workbench.ui.renderer.style.LabelStyle" enabled="false">
+            <color>0, 0, 0, 255</color>
+            <attribute>$FID</attribute>
+            <angleAttribute />
+            <heightAttribute />
+            <font>Dialog, 0, 12</font>
+            <height>12.0</height>
+            <verticalAlignment>DEFAULT</verticalAlignment>
+            <scaled>false</scaled>
+            <overlappingLabelsHidden>true</overlappingLabelsHidden>
+            <outlineShowing>false</outlineShowing>
+            <outlineColor>230, 230, 230, 192</outlineColor>
+            <outlineWidth>4.0</outlineWidth>
+            <hideAtScale>false</hideAtScale>
+            <scaleToHideAt>20000.0</scaleToHideAt>
+            <horizontalAlignment>0</horizontalAlignment>
+            <horizontalPosition>CENTER</horizontalPosition>
+          </style>
+          <style class="com.vividsolutions.jump.workbench.ui.renderer.style.ColorThemingStyle" enabled="false" global-transparency-enabled="true" global-line-width-enabled="true" vertex-style-enabled="false">
+            <attribute-name null="true" />
+            <default-style enabled="true">
+              <fill enabled="true">
+                <pattern null="true" enabled="false" />
+                <color>192, 192, 192, 255</color>
+              </fill>
+              <line enabled="true" width="1">
+                <pattern enabled="false">3</pattern>
+                <color>134, 134, 134, 255</color>
+              </line>
+              <alpha>255</alpha>
+              <vertex-style class="com.vividsolutions.jump.workbench.ui.renderer.style.SquareVertexStyle" enabled="false" size="4" filling="true" />
+            </default-style>
+            <attribute-value-to-style-map class="java.util.HashMap" />
+            <attribute-value-to-label-map class="java.util.HashMap" />
+          </style>
+          <style class="org.openjump.core.ccordsys.srid.SRIDStyle" enabled="true" srid="0" />
+        </styles>
+        <feature-schema-operation>NULL</feature-schema-operation>
+      </layer>
+      <layer class="com.vividsolutions.jump.workbench.model.Layer" name="dikes_murets_classes" visible="true" editable="false" selectable="true" read-only="false" drawnLast="false" synchronizedLineColor="true">
+        <scaleDependentRendering enabled="false">
+          <minScale null="true" />
+          <maxScale null="true" />
+        </scaleDependentRendering>
+        <description />
+        <data-source-query>
+          <query null="true" />
+          <data-source class="com.vividsolutions.jump.io.datasource.StandardReaderWriterFileDataSource$Shapefile">
+            <properties class="java.util.HashMap">
+              <mapping>
+                <key class="java.lang.String">DataSourceClassName</key>
+                <value class="java.lang.String">com.vividsolutions.jump.io.datasource.StandardReaderWriterFileDataSource$Shapefile</value>
+              </mapping>
+              <mapping>
+                <key class="java.lang.String">Uri</key>
+                <value class="java.lang.String">file:/C:/Users/annabelle.moatty/Desktop/Post-doc%20MANA/Dispositif%20MANA/la_vita_130921_Am/la_vita_130921_Am/dikes_murets_classes.shp</value>
+              </mapping>
+              <mapping>
+                <key class="java.lang.String">File</key>
+                <value class="java.lang.String">C:\Users\annabelle.moatty\Desktop\Post-doc MANA\Dispositif MANA\la_vita_130921_Am\la_vita_130921_Am\dikes_murets_classes.shp</value>
+              </mapping>
+            </properties>
+          </data-source>
+        </data-source-query>
+        <styles>
+          <style class="com.vividsolutions.jump.workbench.ui.renderer.style.BasicStyle" enabled="true">
+            <fill enabled="true">
+              <pattern null="true" enabled="false" />
+              <color>255, 0, 0, 255</color>
+            </fill>
+            <line enabled="true" width="1">
+              <pattern enabled="false">3</pattern>
+              <color>178, 0, 0, 255</color>
+            </line>
+            <alpha>150</alpha>
+          </style>
+          <style class="com.vividsolutions.jump.workbench.ui.renderer.style.SquareVertexStyle" enabled="false" size="4" filling="true" />
+          <style class="com.vividsolutions.jump.workbench.ui.renderer.style.LabelStyle" enabled="false">
+            <color>0, 0, 0, 255</color>
+            <attribute>$FID</attribute>
+            <angleAttribute />
+            <heightAttribute />
+            <font>Dialog, 0, 12</font>
+            <height>12.0</height>
+            <verticalAlignment>DEFAULT</verticalAlignment>
+            <scaled>false</scaled>
+            <overlappingLabelsHidden>true</overlappingLabelsHidden>
+            <outlineShowing>false</outlineShowing>
+            <outlineColor>230, 230, 230, 192</outlineColor>
+            <outlineWidth>4.0</outlineWidth>
+            <hideAtScale>false</hideAtScale>
+            <scaleToHideAt>20000.0</scaleToHideAt>
+            <horizontalAlignment>0</horizontalAlignment>
+            <horizontalPosition>CENTER</horizontalPosition>
+          </style>
+          <style class="com.vividsolutions.jump.workbench.ui.renderer.style.ColorThemingStyle" enabled="false" global-transparency-enabled="true" global-line-width-enabled="true" vertex-style-enabled="false">
+            <attribute-name null="true" />
+            <default-style enabled="true">
+              <fill enabled="true">
+                <pattern null="true" enabled="false" />
+                <color>192, 192, 192, 255</color>
+              </fill>
+              <line enabled="true" width="1">
+                <pattern enabled="false">3</pattern>
+                <color>134, 134, 134, 255</color>
+              </line>
+              <alpha>255</alpha>
+              <vertex-style class="com.vividsolutions.jump.workbench.ui.renderer.style.SquareVertexStyle" enabled="false" size="4" filling="true" />
+            </default-style>
+            <attribute-value-to-style-map class="java.util.HashMap" />
+            <attribute-value-to-label-map class="java.util.HashMap" />
+          </style>
+          <style class="org.openjump.core.ccordsys.srid.SRIDStyle" enabled="true" srid="0" />
+        </styles>
+        <feature-schema-operation>NULL</feature-schema-operation>
+      </layer>
+      <layer class="com.vividsolutions.jump.workbench.model.Layer" name="highway" visible="true" editable="false" selectable="true" read-only="false" drawnLast="false" synchronizedLineColor="true">
+        <scaleDependentRendering enabled="false">
+          <minScale null="true" />
+          <maxScale null="true" />
+        </scaleDependentRendering>
+        <description />
+        <data-source-query>
+          <query null="true" />
+          <data-source class="com.vividsolutions.jump.io.datasource.StandardReaderWriterFileDataSource$Shapefile">
+            <properties class="java.util.HashMap">
+              <mapping>
+                <key class="java.lang.String">DataSourceClassName</key>
+                <value class="java.lang.String">com.vividsolutions.jump.io.datasource.StandardReaderWriterFileDataSource$Shapefile</value>
+              </mapping>
+              <mapping>
+                <key class="java.lang.String">Uri</key>
+                <value class="java.lang.String">file:/C:/Users/annabelle.moatty/Desktop/Post-doc%20MANA/Dispositif%20MANA/la_vita_130921_Am/la_vita_130921_Am/highway.shp</value>
+              </mapping>
+              <mapping>
+                <key class="java.lang.String">File</key>
+                <value class="java.lang.String">C:\Users\annabelle.moatty\Desktop\Post-doc MANA\Dispositif MANA\la_vita_130921_Am\la_vita_130921_Am\highway.shp</value>
+              </mapping>
+            </properties>
+          </data-source>
+        </data-source-query>
+        <styles>
+          <style class="com.vividsolutions.jump.workbench.ui.renderer.style.BasicStyle" enabled="true">
+            <fill enabled="true">
+              <pattern null="true" enabled="false" />
+              <color>16, 47, 167, 255</color>
+            </fill>
+            <line enabled="true" width="1">
+              <pattern enabled="false">3</pattern>
+              <color>11, 32, 116, 255</color>
+            </line>
+            <alpha>150</alpha>
+          </style>
+          <style class="com.vividsolutions.jump.workbench.ui.renderer.style.SquareVertexStyle" enabled="false" size="4" filling="true" />
+          <style class="com.vividsolutions.jump.workbench.ui.renderer.style.LabelStyle" enabled="false">
+            <color>0, 0, 0, 255</color>
+            <attribute>$FID</attribute>
+            <angleAttribute />
+            <heightAttribute />
+            <font>Dialog, 0, 12</font>
+            <height>12.0</height>
+            <verticalAlignment>DEFAULT</verticalAlignment>
+            <scaled>false</scaled>
+            <overlappingLabelsHidden>true</overlappingLabelsHidden>
+            <outlineShowing>false</outlineShowing>
+            <outlineColor>230, 230, 230, 192</outlineColor>
+            <outlineWidth>4.0</outlineWidth>
+            <hideAtScale>false</hideAtScale>
+            <scaleToHideAt>20000.0</scaleToHideAt>
+            <horizontalAlignment>0</horizontalAlignment>
+            <horizontalPosition>CENTER</horizontalPosition>
+          </style>
+          <style class="com.vividsolutions.jump.workbench.ui.renderer.style.ColorThemingStyle" enabled="false" global-transparency-enabled="true" global-line-width-enabled="true" vertex-style-enabled="false">
+            <attribute-name null="true" />
+            <default-style enabled="true">
+              <fill enabled="true">
+                <pattern null="true" enabled="false" />
+                <color>192, 192, 192, 255</color>
+              </fill>
+              <line enabled="true" width="1">
+                <pattern enabled="false">3</pattern>
+                <color>134, 134, 134, 255</color>
+              </line>
+              <alpha>255</alpha>
+              <vertex-style class="com.vividsolutions.jump.workbench.ui.renderer.style.SquareVertexStyle" enabled="false" size="4" filling="true" />
+            </default-style>
+            <attribute-value-to-style-map class="java.util.HashMap" />
+            <attribute-value-to-label-map class="java.util.HashMap" />
+          </style>
+          <style class="org.openjump.core.ccordsys.srid.SRIDStyle" enabled="true" srid="32648" />
+        </styles>
+        <feature-schema-operation>NULL</feature-schema-operation>
+      </layer>
+      <layer class="com.vividsolutions.jump.workbench.model.Layer" name="highway_wall" visible="true" editable="false" selectable="true" read-only="false" drawnLast="false" synchronizedLineColor="true">
+        <scaleDependentRendering enabled="false">
+          <minScale null="true" />
+          <maxScale null="true" />
+        </scaleDependentRendering>
+        <description />
+        <data-source-query>
+          <query null="true" />
+          <data-source class="com.vividsolutions.jump.io.datasource.StandardReaderWriterFileDataSource$Shapefile">
+            <properties class="java.util.HashMap">
+              <mapping>
+                <key class="java.lang.String">DataSourceClassName</key>
+                <value class="java.lang.String">com.vividsolutions.jump.io.datasource.StandardReaderWriterFileDataSource$Shapefile</value>
+              </mapping>
+              <mapping>
+                <key class="java.lang.String">Uri</key>
+                <value class="java.lang.String">file:/C:/Users/annabelle.moatty/Desktop/Post-doc%20MANA/Dispositif%20MANA/la_vita_130921_Am/la_vita_130921_Am/highway_wall.shp</value>
+              </mapping>
+              <mapping>
+                <key class="java.lang.String">File</key>
+                <value class="java.lang.String">C:\Users\annabelle.moatty\Desktop\Post-doc MANA\Dispositif MANA\la_vita_130921_Am\la_vita_130921_Am\highway_wall.shp</value>
+              </mapping>
+            </properties>
+          </data-source>
+        </data-source-query>
+        <styles>
+          <style class="com.vividsolutions.jump.workbench.ui.renderer.style.BasicStyle" enabled="true">
+            <fill enabled="true">
+              <pattern null="true" enabled="false" />
+              <color>0, 0, 255, 255</color>
+            </fill>
+            <line enabled="true" width="1">
+              <pattern enabled="false">3</pattern>
+              <color>0, 0, 178, 255</color>
+            </line>
+            <alpha>150</alpha>
+          </style>
+          <style class="com.vividsolutions.jump.workbench.ui.renderer.style.SquareVertexStyle" enabled="false" size="4" filling="true" />
+          <style class="com.vividsolutions.jump.workbench.ui.renderer.style.LabelStyle" enabled="false">
+            <color>0, 0, 0, 255</color>
+            <attribute>$FID</attribute>
+            <angleAttribute />
+            <heightAttribute />
+            <font>Dialog, 0, 12</font>
+            <height>12.0</height>
+            <verticalAlignment>DEFAULT</verticalAlignment>
+            <scaled>false</scaled>
+            <overlappingLabelsHidden>true</overlappingLabelsHidden>
+            <outlineShowing>false</outlineShowing>
+            <outlineColor>230, 230, 230, 192</outlineColor>
+            <outlineWidth>4.0</outlineWidth>
+            <hideAtScale>false</hideAtScale>
+            <scaleToHideAt>20000.0</scaleToHideAt>
+            <horizontalAlignment>0</horizontalAlignment>
+            <horizontalPosition>CENTER</horizontalPosition>
+          </style>
+          <style class="com.vividsolutions.jump.workbench.ui.renderer.style.ColorThemingStyle" enabled="false" global-transparency-enabled="true" global-line-width-enabled="true" vertex-style-enabled="false">
+            <attribute-name null="true" />
+            <default-style enabled="true">
+              <fill enabled="true">
+                <pattern null="true" enabled="false" />
+                <color>192, 192, 192, 255</color>
+              </fill>
+              <line enabled="true" width="1">
+                <pattern enabled="false">3</pattern>
+                <color>134, 134, 134, 255</color>
+              </line>
+              <alpha>255</alpha>
+              <vertex-style class="com.vividsolutions.jump.workbench.ui.renderer.style.SquareVertexStyle" enabled="false" size="4" filling="true" />
+            </default-style>
+            <attribute-value-to-style-map class="java.util.HashMap" />
+            <attribute-value-to-label-map class="java.util.HashMap" />
+          </style>
+          <style class="org.openjump.core.ccordsys.srid.SRIDStyle" enabled="true" srid="0" />
+        </styles>
+        <feature-schema-operation>NULL</feature-schema-operation>
+      </layer>
+      <layer class="com.vividsolutions.jump.workbench.model.Layer" name="main_road" visible="true" editable="false" selectable="true" read-only="false" drawnLast="false" synchronizedLineColor="true">
+        <scaleDependentRendering enabled="false">
+          <minScale null="true" />
+          <maxScale null="true" />
+        </scaleDependentRendering>
+        <description />
+        <data-source-query>
+          <query null="true" />
+          <data-source class="com.vividsolutions.jump.io.datasource.StandardReaderWriterFileDataSource$Shapefile">
+            <properties class="java.util.HashMap">
+              <mapping>
+                <key class="java.lang.String">DataSourceClassName</key>
+                <value class="java.lang.String">com.vividsolutions.jump.io.datasource.StandardReaderWriterFileDataSource$Shapefile</value>
+              </mapping>
+              <mapping>
+                <key class="java.lang.String">Uri</key>
+                <value class="java.lang.String">file:/C:/Users/annabelle.moatty/Desktop/Post-doc%20MANA/Dispositif%20MANA/la_vita_130921_Am/la_vita_130921_Am/main_road.shp</value>
+              </mapping>
+              <mapping>
+                <key class="java.lang.String">File</key>
+                <value class="java.lang.String">C:\Users\annabelle.moatty\Desktop\Post-doc MANA\Dispositif MANA\la_vita_130921_Am\la_vita_130921_Am\main_road.shp</value>
+              </mapping>
+            </properties>
+          </data-source>
+        </data-source-query>
+        <styles>
+          <style class="com.vividsolutions.jump.workbench.ui.renderer.style.BasicStyle" enabled="true">
+            <fill enabled="true">
+              <pattern null="true" enabled="false" />
+              <color>255, 226, 226, 255</color>
+            </fill>
+            <line enabled="true" width="1">
+              <pattern enabled="false">3</pattern>
+              <color>178, 158, 158, 255</color>
+            </line>
+            <alpha>150</alpha>
+          </style>
+          <style class="com.vividsolutions.jump.workbench.ui.renderer.style.SquareVertexStyle" enabled="false" size="4" filling="true" />
+          <style class="com.vividsolutions.jump.workbench.ui.renderer.style.LabelStyle" enabled="false">
+            <color>0, 0, 0, 255</color>
+            <attribute>$FID</attribute>
+            <angleAttribute />
+            <heightAttribute />
+            <font>Dialog, 0, 12</font>
+            <height>12.0</height>
+            <verticalAlignment>DEFAULT</verticalAlignment>
+            <scaled>false</scaled>
+            <overlappingLabelsHidden>true</overlappingLabelsHidden>
+            <outlineShowing>false</outlineShowing>
+            <outlineColor>230, 230, 230, 192</outlineColor>
+            <outlineWidth>4.0</outlineWidth>
+            <hideAtScale>false</hideAtScale>
+            <scaleToHideAt>20000.0</scaleToHideAt>
+            <horizontalAlignment>0</horizontalAlignment>
+            <horizontalPosition>CENTER</horizontalPosition>
+          </style>
+          <style class="com.vividsolutions.jump.workbench.ui.renderer.style.ColorThemingStyle" enabled="false" global-transparency-enabled="true" global-line-width-enabled="true" vertex-style-enabled="false">
+            <attribute-name null="true" />
+            <default-style enabled="true">
+              <fill enabled="true">
+                <pattern null="true" enabled="false" />
+                <color>192, 192, 192, 255</color>
+              </fill>
+              <line enabled="true" width="1">
+                <pattern enabled="false">3</pattern>
+                <color>134, 134, 134, 255</color>
+              </line>
+              <alpha>255</alpha>
+              <vertex-style class="com.vividsolutions.jump.workbench.ui.renderer.style.SquareVertexStyle" enabled="false" size="4" filling="true" />
+            </default-style>
+            <attribute-value-to-style-map class="java.util.HashMap" />
+            <attribute-value-to-label-map class="java.util.HashMap" />
+          </style>
+          <style class="org.openjump.core.ccordsys.srid.SRIDStyle" enabled="true" srid="32648" />
+        </styles>
+        <feature-schema-operation>NULL</feature-schema-operation>
+      </layer>
+      <layer class="com.vividsolutions.jump.workbench.model.Layer" name="city_roads" visible="true" editable="false" selectable="true" read-only="false" drawnLast="false" synchronizedLineColor="true">
+        <scaleDependentRendering enabled="false">
+          <minScale null="true" />
+          <maxScale null="true" />
+        </scaleDependentRendering>
+        <description />
+        <data-source-query>
+          <query null="true" />
+          <data-source class="com.vividsolutions.jump.io.datasource.StandardReaderWriterFileDataSource$Shapefile">
+            <properties class="java.util.HashMap">
+              <mapping>
+                <key class="java.lang.String">DataSourceClassName</key>
+                <value class="java.lang.String">com.vividsolutions.jump.io.datasource.StandardReaderWriterFileDataSource$Shapefile</value>
+              </mapping>
+              <mapping>
+                <key class="java.lang.String">Uri</key>
+                <value class="java.lang.String">file:/C:/Users/annabelle.moatty/Desktop/Post-doc%20MANA/Dispositif%20MANA/la_vita_130921_Am/la_vita_130921_Am/city_roads.shp</value>
+              </mapping>
+              <mapping>
+                <key class="java.lang.String">File</key>
+                <value class="java.lang.String">C:\Users\annabelle.moatty\Desktop\Post-doc MANA\Dispositif MANA\la_vita_130921_Am\la_vita_130921_Am\city_roads.shp</value>
+              </mapping>
+            </properties>
+          </data-source>
+        </data-source-query>
+        <styles>
+          <style class="com.vividsolutions.jump.workbench.ui.renderer.style.BasicStyle" enabled="true">
+            <fill enabled="true">
+              <pattern null="true" enabled="false" />
+              <color>166, 86, 40, 255</color>
+            </fill>
+            <line enabled="true" width="1">
+              <pattern enabled="false">3</pattern>
+              <color>116, 60, 28, 255</color>
+            </line>
+            <alpha>150</alpha>
+          </style>
+          <style class="com.vividsolutions.jump.workbench.ui.renderer.style.SquareVertexStyle" enabled="false" size="4" filling="true" />
+          <style class="com.vividsolutions.jump.workbench.ui.renderer.style.LabelStyle" enabled="false">
+            <color>0, 0, 0, 255</color>
+            <attribute>$FID</attribute>
+            <angleAttribute />
+            <heightAttribute />
+            <font>Dialog, 0, 12</font>
+            <height>12.0</height>
+            <verticalAlignment>DEFAULT</verticalAlignment>
+            <scaled>false</scaled>
+            <overlappingLabelsHidden>true</overlappingLabelsHidden>
+            <outlineShowing>false</outlineShowing>
+            <outlineColor>230, 230, 230, 192</outlineColor>
+            <outlineWidth>4.0</outlineWidth>
+            <hideAtScale>false</hideAtScale>
+            <scaleToHideAt>20000.0</scaleToHideAt>
+            <horizontalAlignment>0</horizontalAlignment>
+            <horizontalPosition>CENTER</horizontalPosition>
+          </style>
+          <style class="com.vividsolutions.jump.workbench.ui.renderer.style.ColorThemingStyle" enabled="false" global-transparency-enabled="true" global-line-width-enabled="true" vertex-style-enabled="false">
+            <attribute-name null="true" />
+            <default-style enabled="true">
+              <fill enabled="true">
+                <pattern null="true" enabled="false" />
+                <color>192, 192, 192, 255</color>
+              </fill>
+              <line enabled="true" width="1">
+                <pattern enabled="false">3</pattern>
+                <color>134, 134, 134, 255</color>
+              </line>
+              <alpha>255</alpha>
+              <vertex-style class="com.vividsolutions.jump.workbench.ui.renderer.style.SquareVertexStyle" enabled="false" size="4" filling="true" />
+            </default-style>
+            <attribute-value-to-style-map class="java.util.HashMap" />
+            <attribute-value-to-label-map class="java.util.HashMap" />
+          </style>
+          <style class="org.openjump.core.ccordsys.srid.SRIDStyle" enabled="true" srid="32648" />
+        </styles>
+        <feature-schema-operation>NULL</feature-schema-operation>
+      </layer>
+      <layer class="com.vividsolutions.jump.workbench.model.Layer" name="pluvial_network" visible="true" editable="false" selectable="true" read-only="false" drawnLast="false" synchronizedLineColor="true">
+        <scaleDependentRendering enabled="false">
+          <minScale null="true" />
+          <maxScale null="true" />
+        </scaleDependentRendering>
+        <description />
+        <data-source-query>
+          <query null="true" />
+          <data-source class="com.vividsolutions.jump.io.datasource.StandardReaderWriterFileDataSource$Shapefile">
+            <properties class="java.util.HashMap">
+              <mapping>
+                <key class="java.lang.String">DataSourceClassName</key>
+                <value class="java.lang.String">com.vividsolutions.jump.io.datasource.StandardReaderWriterFileDataSource$Shapefile</value>
+              </mapping>
+              <mapping>
+                <key class="java.lang.String">Uri</key>
+                <value class="java.lang.String">file:/C:/Users/annabelle.moatty/Desktop/Post-doc%20MANA/Dispositif%20MANA/la_vita_130921_Am/la_vita_130921_Am/pluvial_network.shp</value>
+              </mapping>
+              <mapping>
+                <key class="java.lang.String">File</key>
+                <value class="java.lang.String">C:\Users\annabelle.moatty\Desktop\Post-doc MANA\Dispositif MANA\la_vita_130921_Am\la_vita_130921_Am\pluvial_network.shp</value>
+              </mapping>
+            </properties>
+          </data-source>
+        </data-source-query>
+        <styles>
+          <style class="com.vividsolutions.jump.workbench.ui.renderer.style.BasicStyle" enabled="true">
+            <fill enabled="true">
+              <pattern null="true" enabled="false" />
+              <color>255, 204, 204, 255</color>
+            </fill>
+            <line enabled="true" width="1">
+              <pattern enabled="false">3</pattern>
+              <color>178, 142, 142, 255</color>
+            </line>
+            <alpha>150</alpha>
+          </style>
+          <style class="com.vividsolutions.jump.workbench.ui.renderer.style.SquareVertexStyle" enabled="false" size="4" filling="true" />
+          <style class="com.vividsolutions.jump.workbench.ui.renderer.style.LabelStyle" enabled="false">
+            <color>0, 0, 0, 255</color>
+            <attribute>$FID</attribute>
+            <angleAttribute />
+            <heightAttribute />
+            <font>Dialog, 0, 12</font>
+            <height>12.0</height>
+            <verticalAlignment>DEFAULT</verticalAlignment>
+            <scaled>false</scaled>
+            <overlappingLabelsHidden>true</overlappingLabelsHidden>
+            <outlineShowing>false</outlineShowing>
+            <outlineColor>230, 230, 230, 192</outlineColor>
+            <outlineWidth>4.0</outlineWidth>
+            <hideAtScale>false</hideAtScale>
+            <scaleToHideAt>20000.0</scaleToHideAt>
+            <horizontalAlignment>0</horizontalAlignment>
+            <horizontalPosition>CENTER</horizontalPosition>
+          </style>
+          <style class="com.vividsolutions.jump.workbench.ui.renderer.style.ColorThemingStyle" enabled="false" global-transparency-enabled="true" global-line-width-enabled="true" vertex-style-enabled="false">
+            <attribute-name null="true" />
+            <default-style enabled="true">
+              <fill enabled="true">
+                <pattern null="true" enabled="false" />
+                <color>192, 192, 192, 255</color>
+              </fill>
+              <line enabled="true" width="1">
+                <pattern enabled="false">3</pattern>
+                <color>134, 134, 134, 255</color>
+              </line>
+              <alpha>255</alpha>
+              <vertex-style class="com.vividsolutions.jump.workbench.ui.renderer.style.SquareVertexStyle" enabled="false" size="4" filling="true" />
+            </default-style>
+            <attribute-value-to-style-map class="java.util.HashMap" />
+            <attribute-value-to-label-map class="java.util.HashMap" />
+          </style>
+          <style class="org.openjump.core.ccordsys.srid.SRIDStyle" enabled="true" srid="32648" />
+        </styles>
+        <feature-schema-operation>NULL</feature-schema-operation>
+      </layer>
+      <layer class="com.vividsolutions.jump.workbench.model.Layer" name="riviere_enterree" visible="true" editable="false" selectable="true" read-only="false" drawnLast="false" synchronizedLineColor="true">
+        <scaleDependentRendering enabled="false">
+          <minScale null="true" />
+          <maxScale null="true" />
+        </scaleDependentRendering>
+        <description />
+        <data-source-query>
+          <query null="true" />
+          <data-source class="com.vividsolutions.jump.io.datasource.StandardReaderWriterFileDataSource$Shapefile">
+            <properties class="java.util.HashMap">
+              <mapping>
+                <key class="java.lang.String">DataSourceClassName</key>
+                <value class="java.lang.String">com.vividsolutions.jump.io.datasource.StandardReaderWriterFileDataSource$Shapefile</value>
+              </mapping>
+              <mapping>
+                <key class="java.lang.String">Uri</key>
+                <value class="java.lang.String">file:/C:/Users/annabelle.moatty/Desktop/Post-doc%20MANA/Dispositif%20MANA/la_vita_130921_Am/la_vita_130921_Am/riviere_enterree.shp</value>
+              </mapping>
+              <mapping>
+                <key class="java.lang.String">File</key>
+                <value class="java.lang.String">C:\Users\annabelle.moatty\Desktop\Post-doc MANA\Dispositif MANA\la_vita_130921_Am\la_vita_130921_Am\riviere_enterree.shp</value>
+              </mapping>
+            </properties>
+          </data-source>
+        </data-source-query>
+        <styles>
+          <style class="com.vividsolutions.jump.workbench.ui.renderer.style.BasicStyle" enabled="true">
+            <fill enabled="true">
+              <pattern null="true" enabled="false" />
+              <color>204, 204, 255, 255</color>
+            </fill>
+            <line enabled="true" width="1">
+              <pattern enabled="false">3</pattern>
+              <color>142, 142, 178, 255</color>
+            </line>
+            <alpha>150</alpha>
+          </style>
+          <style class="com.vividsolutions.jump.workbench.ui.renderer.style.SquareVertexStyle" enabled="false" size="4" filling="true" />
+          <style class="com.vividsolutions.jump.workbench.ui.renderer.style.LabelStyle" enabled="false">
+            <color>0, 0, 0, 255</color>
+            <attribute>$FID</attribute>
+            <angleAttribute />
+            <heightAttribute />
+            <font>Dialog, 0, 12</font>
+            <height>12.0</height>
+            <verticalAlignment>DEFAULT</verticalAlignment>
+            <scaled>false</scaled>
+            <overlappingLabelsHidden>true</overlappingLabelsHidden>
+            <outlineShowing>false</outlineShowing>
+            <outlineColor>230, 230, 230, 192</outlineColor>
+            <outlineWidth>4.0</outlineWidth>
+            <hideAtScale>false</hideAtScale>
+            <scaleToHideAt>20000.0</scaleToHideAt>
+            <horizontalAlignment>0</horizontalAlignment>
+            <horizontalPosition>CENTER</horizontalPosition>
+          </style>
+          <style class="com.vividsolutions.jump.workbench.ui.renderer.style.ColorThemingStyle" enabled="false" global-transparency-enabled="true" global-line-width-enabled="true" vertex-style-enabled="false">
+            <attribute-name null="true" />
+            <default-style enabled="true">
+              <fill enabled="true">
+                <pattern null="true" enabled="false" />
+                <color>192, 192, 192, 255</color>
+              </fill>
+              <line enabled="true" width="1">
+                <pattern enabled="false">3</pattern>
+                <color>134, 134, 134, 255</color>
+              </line>
+              <alpha>255</alpha>
+              <vertex-style class="com.vividsolutions.jump.workbench.ui.renderer.style.SquareVertexStyle" enabled="false" size="4" filling="true" />
+            </default-style>
+            <attribute-value-to-style-map class="java.util.HashMap" />
+            <attribute-value-to-label-map class="java.util.HashMap" />
+          </style>
+          <style class="org.openjump.core.ccordsys.srid.SRIDStyle" enabled="true" srid="0" />
+        </styles>
+        <feature-schema-operation>NULL</feature-schema-operation>
+      </layer>
+      <layer class="com.vividsolutions.jump.workbench.model.Layer" name="river" visible="true" editable="false" selectable="true" read-only="false" drawnLast="false" synchronizedLineColor="true">
+        <scaleDependentRendering enabled="false">
+          <minScale null="true" />
+          <maxScale null="true" />
+        </scaleDependentRendering>
+        <description />
+        <data-source-query>
+          <query null="true" />
+          <data-source class="com.vividsolutions.jump.io.datasource.StandardReaderWriterFileDataSource$Shapefile">
+            <properties class="java.util.HashMap">
+              <mapping>
+                <key class="java.lang.String">DataSourceClassName</key>
+                <value class="java.lang.String">com.vividsolutions.jump.io.datasource.StandardReaderWriterFileDataSource$Shapefile</value>
+              </mapping>
+              <mapping>
+                <key class="java.lang.String">Uri</key>
+                <value class="java.lang.String">file:/C:/Users/annabelle.moatty/Desktop/Post-doc%20MANA/Dispositif%20MANA/la_vita_130921_Am/la_vita_130921_Am/river.shp</value>
+              </mapping>
+              <mapping>
+                <key class="java.lang.String">File</key>
+                <value class="java.lang.String">C:\Users\annabelle.moatty\Desktop\Post-doc MANA\Dispositif MANA\la_vita_130921_Am\la_vita_130921_Am\river.shp</value>
+              </mapping>
+            </properties>
+          </data-source>
+        </data-source-query>
+        <styles>
+          <style class="com.vividsolutions.jump.workbench.ui.renderer.style.BasicStyle" enabled="true">
+            <fill enabled="true">
+              <pattern null="true" enabled="false" />
+              <color>255, 255, 51, 255</color>
+            </fill>
+            <line enabled="true" width="1">
+              <pattern enabled="false">3</pattern>
+              <color>178, 178, 35, 255</color>
+            </line>
+            <alpha>150</alpha>
+          </style>
+          <style class="com.vividsolutions.jump.workbench.ui.renderer.style.SquareVertexStyle" enabled="false" size="4" filling="true" />
+          <style class="com.vividsolutions.jump.workbench.ui.renderer.style.LabelStyle" enabled="false">
+            <color>0, 0, 0, 255</color>
+            <attribute>$FID</attribute>
+            <angleAttribute />
+            <heightAttribute />
+            <font>Dialog, 0, 12</font>
+            <height>12.0</height>
+            <verticalAlignment>DEFAULT</verticalAlignment>
+            <scaled>false</scaled>
+            <overlappingLabelsHidden>true</overlappingLabelsHidden>
+            <outlineShowing>false</outlineShowing>
+            <outlineColor>230, 230, 230, 192</outlineColor>
+            <outlineWidth>4.0</outlineWidth>
+            <hideAtScale>false</hideAtScale>
+            <scaleToHideAt>20000.0</scaleToHideAt>
+            <horizontalAlignment>0</horizontalAlignment>
+            <horizontalPosition>CENTER</horizontalPosition>
+          </style>
+          <style class="com.vividsolutions.jump.workbench.ui.renderer.style.ColorThemingStyle" enabled="false" global-transparency-enabled="true" global-line-width-enabled="true" vertex-style-enabled="false">
+            <attribute-name null="true" />
+            <default-style enabled="true">
+              <fill enabled="true">
+                <pattern null="true" enabled="false" />
+                <color>192, 192, 192, 255</color>
+              </fill>
+              <line enabled="true" width="1">
+                <pattern enabled="false">3</pattern>
+                <color>134, 134, 134, 255</color>
+              </line>
+              <alpha>255</alpha>
+              <vertex-style class="com.vividsolutions.jump.workbench.ui.renderer.style.SquareVertexStyle" enabled="false" size="4" filling="true" />
+            </default-style>
+            <attribute-value-to-style-map class="java.util.HashMap" />
+            <attribute-value-to-label-map class="java.util.HashMap" />
+          </style>
+          <style class="org.openjump.core.ccordsys.srid.SRIDStyle" enabled="true" srid="32648" />
+        </styles>
+        <feature-schema-operation>NULL</feature-schema-operation>
+      </layer>
+      <layer class="com.vividsolutions.jump.workbench.model.Layer" name="passage_pont" visible="true" editable="false" selectable="true" read-only="false" drawnLast="false" synchronizedLineColor="true">
+        <scaleDependentRendering enabled="false">
+          <minScale null="true" />
+          <maxScale null="true" />
+        </scaleDependentRendering>
+        <description />
+        <data-source-query>
+          <query null="true" />
+          <data-source class="com.vividsolutions.jump.io.datasource.StandardReaderWriterFileDataSource$Shapefile">
+            <properties class="java.util.HashMap">
+              <mapping>
+                <key class="java.lang.String">DataSourceClassName</key>
+                <value class="java.lang.String">com.vividsolutions.jump.io.datasource.StandardReaderWriterFileDataSource$Shapefile</value>
+              </mapping>
+              <mapping>
+                <key class="java.lang.String">Uri</key>
+                <value class="java.lang.String">file:/C:/Users/annabelle.moatty/Desktop/Post-doc%20MANA/Dispositif%20MANA/la_vita_130921_Am/la_vita_130921_Am/passage_pont.shp</value>
+              </mapping>
+              <mapping>
+                <key class="java.lang.String">File</key>
+                <value class="java.lang.String">C:\Users\annabelle.moatty\Desktop\Post-doc MANA\Dispositif MANA\la_vita_130921_Am\la_vita_130921_Am\passage_pont.shp</value>
+              </mapping>
+            </properties>
+          </data-source>
+        </data-source-query>
+        <styles>
+          <style class="com.vividsolutions.jump.workbench.ui.renderer.style.BasicStyle" enabled="true">
+            <fill enabled="true">
+              <pattern null="true" enabled="false" />
+              <color>0, 180, 180, 255</color>
+            </fill>
+            <line enabled="true" width="1">
+              <pattern enabled="false">3</pattern>
+              <color>0, 125, 125, 255</color>
+            </line>
+            <alpha>150</alpha>
+          </style>
+          <style class="com.vividsolutions.jump.workbench.ui.renderer.style.SquareVertexStyle" enabled="false" size="4" filling="true" />
+          <style class="com.vividsolutions.jump.workbench.ui.renderer.style.LabelStyle" enabled="false">
+            <color>0, 0, 0, 255</color>
+            <attribute>$FID</attribute>
+            <angleAttribute />
+            <heightAttribute />
+            <font>Dialog, 0, 12</font>
+            <height>12.0</height>
+            <verticalAlignment>DEFAULT</verticalAlignment>
+            <scaled>false</scaled>
+            <overlappingLabelsHidden>true</overlappingLabelsHidden>
+            <outlineShowing>false</outlineShowing>
+            <outlineColor>230, 230, 230, 192</outlineColor>
+            <outlineWidth>4.0</outlineWidth>
+            <hideAtScale>false</hideAtScale>
+            <scaleToHideAt>20000.0</scaleToHideAt>
+            <horizontalAlignment>0</horizontalAlignment>
+            <horizontalPosition>CENTER</horizontalPosition>
+          </style>
+          <style class="com.vividsolutions.jump.workbench.ui.renderer.style.ColorThemingStyle" enabled="false" global-transparency-enabled="true" global-line-width-enabled="true" vertex-style-enabled="false">
+            <attribute-name null="true" />
+            <default-style enabled="true">
+              <fill enabled="true">
+                <pattern null="true" enabled="false" />
+                <color>192, 192, 192, 255</color>
+              </fill>
+              <line enabled="true" width="1">
+                <pattern enabled="false">3</pattern>
+                <color>134, 134, 134, 255</color>
+              </line>
+              <alpha>255</alpha>
+              <vertex-style class="com.vividsolutions.jump.workbench.ui.renderer.style.SquareVertexStyle" enabled="false" size="4" filling="true" />
+            </default-style>
+            <attribute-value-to-style-map class="java.util.HashMap" />
+            <attribute-value-to-label-map class="java.util.HashMap" />
+          </style>
+          <style class="org.openjump.core.ccordsys.srid.SRIDStyle" enabled="true" srid="0" />
+        </styles>
+        <feature-schema-operation>NULL</feature-schema-operation>
+      </layer>
+      <layer class="com.vividsolutions.jump.workbench.model.Layer" name="parking" visible="true" editable="false" selectable="true" read-only="false" drawnLast="false" synchronizedLineColor="true">
+        <scaleDependentRendering enabled="false">
+          <minScale null="true" />
+          <maxScale null="true" />
+        </scaleDependentRendering>
+        <description />
+        <data-source-query>
+          <query null="true" />
+          <data-source class="com.vividsolutions.jump.io.datasource.StandardReaderWriterFileDataSource$Shapefile">
+            <properties class="java.util.HashMap">
+              <mapping>
+                <key class="java.lang.String">DataSourceClassName</key>
+                <value class="java.lang.String">com.vividsolutions.jump.io.datasource.StandardReaderWriterFileDataSource$Shapefile</value>
+              </mapping>
+              <mapping>
+                <key class="java.lang.String">Uri</key>
+                <value class="java.lang.String">file:/C:/Users/annabelle.moatty/Desktop/Post-doc%20MANA/Dispositif%20MANA/la_vita_130921_Am/la_vita_130921_Am/parking.shp</value>
+              </mapping>
+              <mapping>
+                <key class="java.lang.String">File</key>
+                <value class="java.lang.String">C:\Users\annabelle.moatty\Desktop\Post-doc MANA\Dispositif MANA\la_vita_130921_Am\la_vita_130921_Am\parking.shp</value>
+              </mapping>
+            </properties>
+          </data-source>
+        </data-source-query>
+        <styles>
+          <style class="com.vividsolutions.jump.workbench.ui.renderer.style.BasicStyle" enabled="true">
+            <fill enabled="true">
+              <pattern null="true" enabled="false" />
+              <color>152, 78, 163, 255</color>
+            </fill>
+            <line enabled="true" width="1">
+              <pattern enabled="false">3</pattern>
+              <color>106, 54, 114, 255</color>
+            </line>
+            <alpha>150</alpha>
+          </style>
+          <style class="com.vividsolutions.jump.workbench.ui.renderer.style.SquareVertexStyle" enabled="false" size="4" filling="true" />
+          <style class="com.vividsolutions.jump.workbench.ui.renderer.style.LabelStyle" enabled="false">
+            <color>0, 0, 0, 255</color>
+            <attribute>$FID</attribute>
+            <angleAttribute />
+            <heightAttribute />
+            <font>Dialog, 0, 12</font>
+            <height>12.0</height>
+            <verticalAlignment>DEFAULT</verticalAlignment>
+            <scaled>false</scaled>
+            <overlappingLabelsHidden>true</overlappingLabelsHidden>
+            <outlineShowing>false</outlineShowing>
+            <outlineColor>230, 230, 230, 192</outlineColor>
+            <outlineWidth>4.0</outlineWidth>
+            <hideAtScale>false</hideAtScale>
+            <scaleToHideAt>20000.0</scaleToHideAt>
+            <horizontalAlignment>0</horizontalAlignment>
+            <horizontalPosition>CENTER</horizontalPosition>
+          </style>
+          <style class="com.vividsolutions.jump.workbench.ui.renderer.style.ColorThemingStyle" enabled="false" global-transparency-enabled="true" global-line-width-enabled="true" vertex-style-enabled="false">
+            <attribute-name null="true" />
+            <default-style enabled="true">
+              <fill enabled="true">
+                <pattern null="true" enabled="false" />
+                <color>192, 192, 192, 255</color>
+              </fill>
+              <line enabled="true" width="1">
+                <pattern enabled="false">3</pattern>
+                <color>134, 134, 134, 255</color>
+              </line>
+              <alpha>255</alpha>
+              <vertex-style class="com.vividsolutions.jump.workbench.ui.renderer.style.SquareVertexStyle" enabled="false" size="4" filling="true" />
+            </default-style>
+            <attribute-value-to-style-map class="java.util.HashMap" />
+            <attribute-value-to-label-map class="java.util.HashMap" />
+          </style>
+          <style class="org.openjump.core.ccordsys.srid.SRIDStyle" enabled="true" srid="0" />
+        </styles>
+        <feature-schema-operation>NULL</feature-schema-operation>
+      </layer>
+      <layer class="com.vividsolutions.jump.workbench.model.Layer" name="green_area" visible="true" editable="false" selectable="true" read-only="false" drawnLast="false" synchronizedLineColor="true">
+        <scaleDependentRendering enabled="false">
+          <minScale null="true" />
+          <maxScale null="true" />
+        </scaleDependentRendering>
+        <description />
+        <data-source-query>
+          <query null="true" />
+          <data-source class="com.vividsolutions.jump.io.datasource.StandardReaderWriterFileDataSource$Shapefile">
+            <properties class="java.util.HashMap">
+              <mapping>
+                <key class="java.lang.String">DataSourceClassName</key>
+                <value class="java.lang.String">com.vividsolutions.jump.io.datasource.StandardReaderWriterFileDataSource$Shapefile</value>
+              </mapping>
+              <mapping>
+                <key class="java.lang.String">Uri</key>
+                <value class="java.lang.String">file:/C:/Users/annabelle.moatty/Desktop/Post-doc%20MANA/Dispositif%20MANA/la_vita_130921_Am/la_vita_130921_Am/green_area.shp</value>
+              </mapping>
+              <mapping>
+                <key class="java.lang.String">File</key>
+                <value class="java.lang.String">C:\Users\annabelle.moatty\Desktop\Post-doc MANA\Dispositif MANA\la_vita_130921_Am\la_vita_130921_Am\green_area.shp</value>
+              </mapping>
+            </properties>
+          </data-source>
+        </data-source-query>
+        <styles>
+          <style class="com.vividsolutions.jump.workbench.ui.renderer.style.BasicStyle" enabled="true">
+            <fill enabled="true">
+              <pattern null="true" enabled="false" />
+              <color>226, 226, 255, 255</color>
+            </fill>
+            <line enabled="true" width="1">
+              <pattern enabled="false">3</pattern>
+              <color>158, 158, 178, 255</color>
+            </line>
+            <alpha>150</alpha>
+          </style>
+          <style class="com.vividsolutions.jump.workbench.ui.renderer.style.SquareVertexStyle" enabled="false" size="4" filling="true" />
+          <style class="com.vividsolutions.jump.workbench.ui.renderer.style.LabelStyle" enabled="false">
+            <color>0, 0, 0, 255</color>
+            <attribute>$FID</attribute>
+            <angleAttribute />
+            <heightAttribute />
+            <font>Dialog, 0, 12</font>
+            <height>12.0</height>
+            <verticalAlignment>DEFAULT</verticalAlignment>
+            <scaled>false</scaled>
+            <overlappingLabelsHidden>true</overlappingLabelsHidden>
+            <outlineShowing>false</outlineShowing>
+            <outlineColor>230, 230, 230, 192</outlineColor>
+            <outlineWidth>4.0</outlineWidth>
+            <hideAtScale>false</hideAtScale>
+            <scaleToHideAt>20000.0</scaleToHideAt>
+            <horizontalAlignment>0</horizontalAlignment>
+            <horizontalPosition>CENTER</horizontalPosition>
+          </style>
+          <style class="com.vividsolutions.jump.workbench.ui.renderer.style.ColorThemingStyle" enabled="false" global-transparency-enabled="true" global-line-width-enabled="true" vertex-style-enabled="false">
+            <attribute-name null="true" />
+            <default-style enabled="true">
+              <fill enabled="true">
+                <pattern null="true" enabled="false" />
+                <color>192, 192, 192, 255</color>
+              </fill>
+              <line enabled="true" width="1">
+                <pattern enabled="false">3</pattern>
+                <color>134, 134, 134, 255</color>
+              </line>
+              <alpha>255</alpha>
+              <vertex-style class="com.vividsolutions.jump.workbench.ui.renderer.style.SquareVertexStyle" enabled="false" size="4" filling="true" />
+            </default-style>
+            <attribute-value-to-style-map class="java.util.HashMap" />
+            <attribute-value-to-label-map class="java.util.HashMap" />
+          </style>
+          <style class="org.openjump.core.ccordsys.srid.SRIDStyle" enabled="true" srid="32648" />
+        </styles>
+        <feature-schema-operation>NULL</feature-schema-operation>
+      </layer>
+      <layer class="com.vividsolutions.jump.workbench.model.Layer" name="sea" visible="true" editable="false" selectable="true" read-only="false" drawnLast="false" synchronizedLineColor="true">
+        <scaleDependentRendering enabled="false">
+          <minScale null="true" />
+          <maxScale null="true" />
+        </scaleDependentRendering>
+        <description />
+        <data-source-query>
+          <query null="true" />
+          <data-source class="com.vividsolutions.jump.io.datasource.StandardReaderWriterFileDataSource$Shapefile">
+            <properties class="java.util.HashMap">
+              <mapping>
+                <key class="java.lang.String">DataSourceClassName</key>
+                <value class="java.lang.String">com.vividsolutions.jump.io.datasource.StandardReaderWriterFileDataSource$Shapefile</value>
+              </mapping>
+              <mapping>
+                <key class="java.lang.String">Uri</key>
+                <value class="java.lang.String">file:/C:/Users/annabelle.moatty/Desktop/Post-doc%20MANA/Dispositif%20MANA/la_vita_130921_Am/la_vita_130921_Am/sea.shp</value>
+              </mapping>
+              <mapping>
+                <key class="java.lang.String">File</key>
+                <value class="java.lang.String">C:\Users\annabelle.moatty\Desktop\Post-doc MANA\Dispositif MANA\la_vita_130921_Am\la_vita_130921_Am\sea.shp</value>
+              </mapping>
+            </properties>
+          </data-source>
+        </data-source-query>
+        <styles>
+          <style class="com.vividsolutions.jump.workbench.ui.renderer.style.BasicStyle" enabled="true">
+            <fill enabled="true">
+              <pattern null="true" enabled="false" />
+              <color>0, 255, 255, 255</color>
+            </fill>
+            <line enabled="true" width="1">
+              <pattern enabled="false">3</pattern>
+              <color>0, 178, 178, 255</color>
+            </line>
+            <alpha>150</alpha>
+          </style>
+          <style class="com.vividsolutions.jump.workbench.ui.renderer.style.SquareVertexStyle" enabled="false" size="4" filling="true" />
+          <style class="com.vividsolutions.jump.workbench.ui.renderer.style.LabelStyle" enabled="false">
+            <color>0, 0, 0, 255</color>
+            <attribute>$FID</attribute>
+            <angleAttribute />
+            <heightAttribute />
+            <font>Dialog, 0, 12</font>
+            <height>12.0</height>
+            <verticalAlignment>DEFAULT</verticalAlignment>
+            <scaled>false</scaled>
+            <overlappingLabelsHidden>true</overlappingLabelsHidden>
+            <outlineShowing>false</outlineShowing>
+            <outlineColor>230, 230, 230, 192</outlineColor>
+            <outlineWidth>4.0</outlineWidth>
+            <hideAtScale>false</hideAtScale>
+            <scaleToHideAt>20000.0</scaleToHideAt>
+            <horizontalAlignment>0</horizontalAlignment>
+            <horizontalPosition>CENTER</horizontalPosition>
+          </style>
+          <style class="com.vividsolutions.jump.workbench.ui.renderer.style.ColorThemingStyle" enabled="false" global-transparency-enabled="true" global-line-width-enabled="true" vertex-style-enabled="false">
+            <attribute-name null="true" />
+            <default-style enabled="true">
+              <fill enabled="true">
+                <pattern null="true" enabled="false" />
+                <color>192, 192, 192, 255</color>
+              </fill>
+              <line enabled="true" width="1">
+                <pattern enabled="false">3</pattern>
+                <color>134, 134, 134, 255</color>
+              </line>
+              <alpha>255</alpha>
+              <vertex-style class="com.vividsolutions.jump.workbench.ui.renderer.style.SquareVertexStyle" enabled="false" size="4" filling="true" />
+            </default-style>
+            <attribute-value-to-style-map class="java.util.HashMap" />
+            <attribute-value-to-label-map class="java.util.HashMap" />
+          </style>
+          <style class="org.openjump.core.ccordsys.srid.SRIDStyle" enabled="true" srid="32648" />
+        </styles>
+        <feature-schema-operation>NULL</feature-schema-operation>
+      </layer>
+      <layer class="com.vividsolutions.jump.workbench.model.Layer" name="NATURA_2000" visible="true" editable="true" selectable="true" read-only="false" drawnLast="false" synchronizedLineColor="true">
+        <scaleDependentRendering enabled="false">
+          <minScale null="true" />
+          <maxScale null="true" />
+        </scaleDependentRendering>
+        <description />
+        <data-source-query>
+          <query null="true" />
+          <data-source class="com.vividsolutions.jump.io.datasource.StandardReaderWriterFileDataSource$Shapefile">
+            <properties class="java.util.HashMap">
+              <mapping>
+                <key class="java.lang.String">DataSourceClassName</key>
+                <value class="java.lang.String">com.vividsolutions.jump.io.datasource.StandardReaderWriterFileDataSource$Shapefile</value>
+              </mapping>
+              <mapping>
+                <key class="java.lang.String">Uri</key>
+                <value class="java.lang.String">file:/C:/Users/annabelle.moatty/Desktop/Post-doc%20MANA/Dispositif%20MANA/la_vita_130921_Am/la_vita_130921_Am/NATURA_2000.shp</value>
+              </mapping>
+              <mapping>
+                <key class="java.lang.String">File</key>
+                <value class="java.lang.String">C:\Users\annabelle.moatty\Desktop\Post-doc MANA\Dispositif MANA\la_vita_130921_Am\la_vita_130921_Am\NATURA_2000.shp</value>
+              </mapping>
+            </properties>
+          </data-source>
+        </data-source-query>
+        <styles>
+          <style class="com.vividsolutions.jump.workbench.ui.renderer.style.BasicStyle" enabled="true">
+            <fill enabled="true">
+              <pattern null="true" enabled="false" />
+              <color>255, 127, 0, 255</color>
+            </fill>
+            <line enabled="true" width="1">
+              <pattern enabled="false">3</pattern>
+              <color>178, 88, 0, 255</color>
+            </line>
+            <alpha>150</alpha>
+          </style>
+          <style class="com.vividsolutions.jump.workbench.ui.renderer.style.SquareVertexStyle" enabled="false" size="4" filling="true" />
+          <style class="com.vividsolutions.jump.workbench.ui.renderer.style.LabelStyle" enabled="false">
+            <color>0, 0, 0, 255</color>
+            <attribute>$FID</attribute>
+            <angleAttribute />
+            <heightAttribute />
+            <font>Dialog, 0, 12</font>
+            <height>12.0</height>
+            <verticalAlignment>DEFAULT</verticalAlignment>
+            <scaled>false</scaled>
+            <overlappingLabelsHidden>true</overlappingLabelsHidden>
+            <outlineShowing>false</outlineShowing>
+            <outlineColor>230, 230, 230, 192</outlineColor>
+            <outlineWidth>4.0</outlineWidth>
+            <hideAtScale>false</hideAtScale>
+            <scaleToHideAt>20000.0</scaleToHideAt>
+            <horizontalAlignment>0</horizontalAlignment>
+            <horizontalPosition>CENTER</horizontalPosition>
+          </style>
+          <style class="com.vividsolutions.jump.workbench.ui.renderer.style.ColorThemingStyle" enabled="false" global-transparency-enabled="true" global-line-width-enabled="true" vertex-style-enabled="false">
+            <attribute-name null="true" />
+            <default-style enabled="true">
+              <fill enabled="true">
+                <pattern null="true" enabled="false" />
+                <color>192, 192, 192, 255</color>
+              </fill>
+              <line enabled="true" width="1">
+                <pattern enabled="false">3</pattern>
+                <color>134, 134, 134, 255</color>
+              </line>
+              <alpha>255</alpha>
+              <vertex-style class="com.vividsolutions.jump.workbench.ui.renderer.style.SquareVertexStyle" enabled="false" size="4" filling="true" />
+            </default-style>
+            <attribute-value-to-style-map class="java.util.HashMap" />
+            <attribute-value-to-label-map class="java.util.HashMap" />
+          </style>
+          <style class="org.openjump.core.ccordsys.srid.SRIDStyle" enabled="true" srid="0" />
+        </styles>
+        <feature-schema-operation>NULL</feature-schema-operation>
+      </layer>
+      <layer class="com.vividsolutions.jump.workbench.model.Layer" name="PLU_AU" visible="true" editable="false" selectable="true" read-only="false" drawnLast="false" synchronizedLineColor="true">
+        <scaleDependentRendering enabled="false">
+          <minScale null="true" />
+          <maxScale null="true" />
+        </scaleDependentRendering>
+        <description />
+        <data-source-query>
+          <query null="true" />
+          <data-source class="com.vividsolutions.jump.io.datasource.StandardReaderWriterFileDataSource$Shapefile">
+            <properties class="java.util.HashMap">
+              <mapping>
+                <key class="java.lang.String">DataSourceClassName</key>
+                <value class="java.lang.String">com.vividsolutions.jump.io.datasource.StandardReaderWriterFileDataSource$Shapefile</value>
+              </mapping>
+              <mapping>
+                <key class="java.lang.String">Uri</key>
+                <value class="java.lang.String">file:/C:/Users/annabelle.moatty/Desktop/Post-doc%20MANA/Dispositif%20MANA/la_vita_130921_Am/la_vita_130921_Am/PLU_AU.shp</value>
+              </mapping>
+              <mapping>
+                <key class="java.lang.String">File</key>
+                <value class="java.lang.String">C:\Users\annabelle.moatty\Desktop\Post-doc MANA\Dispositif MANA\la_vita_130921_Am\la_vita_130921_Am\PLU_AU.shp</value>
+              </mapping>
+            </properties>
+          </data-source>
+        </data-source-query>
+        <styles>
+          <style class="com.vividsolutions.jump.workbench.ui.renderer.style.BasicStyle" enabled="true">
+            <fill enabled="true">
+              <pattern null="true" enabled="false" />
+              <color>247, 129, 191, 255</color>
+            </fill>
+            <line enabled="true" width="1">
+              <pattern enabled="false">3</pattern>
+              <color>172, 90, 133, 255</color>
+            </line>
+            <alpha>150</alpha>
+          </style>
+          <style class="com.vividsolutions.jump.workbench.ui.renderer.style.SquareVertexStyle" enabled="false" size="4" filling="true" />
+          <style class="com.vividsolutions.jump.workbench.ui.renderer.style.LabelStyle" enabled="false">
+            <color>0, 0, 0, 255</color>
+            <attribute>$FID</attribute>
+            <angleAttribute />
+            <heightAttribute />
+            <font>Dialog, 0, 12</font>
+            <height>12.0</height>
+            <verticalAlignment>DEFAULT</verticalAlignment>
+            <scaled>false</scaled>
+            <overlappingLabelsHidden>true</overlappingLabelsHidden>
+            <outlineShowing>false</outlineShowing>
+            <outlineColor>230, 230, 230, 192</outlineColor>
+            <outlineWidth>4.0</outlineWidth>
+            <hideAtScale>false</hideAtScale>
+            <scaleToHideAt>20000.0</scaleToHideAt>
+            <horizontalAlignment>0</horizontalAlignment>
+            <horizontalPosition>CENTER</horizontalPosition>
+          </style>
+          <style class="com.vividsolutions.jump.workbench.ui.renderer.style.ColorThemingStyle" enabled="false" global-transparency-enabled="true" global-line-width-enabled="true" vertex-style-enabled="false">
+            <attribute-name null="true" />
+            <default-style enabled="true">
+              <fill enabled="true">
+                <pattern null="true" enabled="false" />
+                <color>192, 192, 192, 255</color>
+              </fill>
+              <line enabled="true" width="1">
+                <pattern enabled="false">3</pattern>
+                <color>134, 134, 134, 255</color>
+              </line>
+              <alpha>255</alpha>
+              <vertex-style class="com.vividsolutions.jump.workbench.ui.renderer.style.SquareVertexStyle" enabled="false" size="4" filling="true" />
+            </default-style>
+            <attribute-value-to-style-map class="java.util.HashMap" />
+            <attribute-value-to-label-map class="java.util.HashMap" />
+          </style>
+          <style class="org.openjump.core.ccordsys.srid.SRIDStyle" enabled="true" srid="0" />
+        </styles>
+        <feature-schema-operation>NULL</feature-schema-operation>
+      </layer>
+      <layer class="com.vividsolutions.jump.workbench.model.Layer" name="PLU_A" visible="true" editable="false" selectable="true" read-only="false" drawnLast="false" synchronizedLineColor="true">
+        <scaleDependentRendering enabled="false">
+          <minScale null="true" />
+          <maxScale null="true" />
+        </scaleDependentRendering>
+        <description />
+        <data-source-query>
+          <query null="true" />
+          <data-source class="com.vividsolutions.jump.io.datasource.StandardReaderWriterFileDataSource$Shapefile">
+            <properties class="java.util.HashMap">
+              <mapping>
+                <key class="java.lang.String">DataSourceClassName</key>
+                <value class="java.lang.String">com.vividsolutions.jump.io.datasource.StandardReaderWriterFileDataSource$Shapefile</value>
+              </mapping>
+              <mapping>
+                <key class="java.lang.String">Uri</key>
+                <value class="java.lang.String">file:/C:/Users/annabelle.moatty/Desktop/Post-doc%20MANA/Dispositif%20MANA/la_vita_130921_Am/la_vita_130921_Am/PLU_A.shp</value>
+              </mapping>
+              <mapping>
+                <key class="java.lang.String">File</key>
+                <value class="java.lang.String">C:\Users\annabelle.moatty\Desktop\Post-doc MANA\Dispositif MANA\la_vita_130921_Am\la_vita_130921_Am\PLU_A.shp</value>
+              </mapping>
+            </properties>
+          </data-source>
+        </data-source-query>
+        <styles>
+          <style class="com.vividsolutions.jump.workbench.ui.renderer.style.BasicStyle" enabled="true">
+            <fill enabled="true">
+              <pattern null="true" enabled="false" />
+              <color>255, 192, 0, 255</color>
+            </fill>
+            <line enabled="true" width="1">
+              <pattern enabled="false">3</pattern>
+              <color>178, 134, 0, 255</color>
+            </line>
+            <alpha>150</alpha>
+          </style>
+          <style class="com.vividsolutions.jump.workbench.ui.renderer.style.SquareVertexStyle" enabled="false" size="4" filling="true" />
+          <style class="com.vividsolutions.jump.workbench.ui.renderer.style.LabelStyle" enabled="false">
+            <color>0, 0, 0, 255</color>
+            <attribute>$FID</attribute>
+            <angleAttribute />
+            <heightAttribute />
+            <font>Dialog, 0, 12</font>
+            <height>12.0</height>
+            <verticalAlignment>DEFAULT</verticalAlignment>
+            <scaled>false</scaled>
+            <overlappingLabelsHidden>true</overlappingLabelsHidden>
+            <outlineShowing>false</outlineShowing>
+            <outlineColor>230, 230, 230, 192</outlineColor>
+            <outlineWidth>4.0</outlineWidth>
+            <hideAtScale>false</hideAtScale>
+            <scaleToHideAt>20000.0</scaleToHideAt>
+            <horizontalAlignment>0</horizontalAlignment>
+            <horizontalPosition>CENTER</horizontalPosition>
+          </style>
+          <style class="com.vividsolutions.jump.workbench.ui.renderer.style.ColorThemingStyle" enabled="false" global-transparency-enabled="true" global-line-width-enabled="true" vertex-style-enabled="false">
+            <attribute-name null="true" />
+            <default-style enabled="true">
+              <fill enabled="true">
+                <pattern null="true" enabled="false" />
+                <color>192, 192, 192, 255</color>
+              </fill>
+              <line enabled="true" width="1">
+                <pattern enabled="false">3</pattern>
+                <color>134, 134, 134, 255</color>
+              </line>
+              <alpha>255</alpha>
+              <vertex-style class="com.vividsolutions.jump.workbench.ui.renderer.style.SquareVertexStyle" enabled="false" size="4" filling="true" />
+            </default-style>
+            <attribute-value-to-style-map class="java.util.HashMap" />
+            <attribute-value-to-label-map class="java.util.HashMap" />
+          </style>
+          <style class="org.openjump.core.ccordsys.srid.SRIDStyle" enabled="true" srid="0" />
+        </styles>
+        <feature-schema-operation>NULL</feature-schema-operation>
+      </layer>
+      <layer class="com.vividsolutions.jump.workbench.model.Layer" name="PLU_N" visible="true" editable="false" selectable="true" read-only="false" drawnLast="false" synchronizedLineColor="true">
+        <scaleDependentRendering enabled="false">
+          <minScale null="true" />
+          <maxScale null="true" />
+        </scaleDependentRendering>
+        <description />
+        <data-source-query>
+          <query null="true" />
+          <data-source class="com.vividsolutions.jump.io.datasource.StandardReaderWriterFileDataSource$Shapefile">
+            <properties class="java.util.HashMap">
+              <mapping>
+                <key class="java.lang.String">DataSourceClassName</key>
+                <value class="java.lang.String">com.vividsolutions.jump.io.datasource.StandardReaderWriterFileDataSource$Shapefile</value>
+              </mapping>
+              <mapping>
+                <key class="java.lang.String">Uri</key>
+                <value class="java.lang.String">file:/C:/Users/annabelle.moatty/Desktop/Post-doc%20MANA/Dispositif%20MANA/la_vita_130921_Am/la_vita_130921_Am/PLU_N.shp</value>
+              </mapping>
+              <mapping>
+                <key class="java.lang.String">File</key>
+                <value class="java.lang.String">C:\Users\annabelle.moatty\Desktop\Post-doc MANA\Dispositif MANA\la_vita_130921_Am\la_vita_130921_Am\PLU_N.shp</value>
+              </mapping>
+            </properties>
+          </data-source>
+        </data-source-query>
+        <styles>
+          <style class="com.vividsolutions.jump.workbench.ui.renderer.style.ColorThemingStyle" enabled="false" global-transparency-enabled="true" global-line-width-enabled="true" vertex-style-enabled="false">
+            <attribute-name null="true" />
+            <default-style enabled="true">
+              <fill enabled="true">
+                <pattern null="true" enabled="false" />
+                <color>192, 192, 192, 255</color>
+              </fill>
+              <line enabled="true" width="1">
+                <pattern enabled="false">3</pattern>
+                <color>134, 134, 134, 255</color>
+              </line>
+              <alpha>255</alpha>
+              <vertex-style class="com.vividsolutions.jump.workbench.ui.renderer.style.SquareVertexStyle" enabled="false" size="4" filling="true" />
+            </default-style>
+            <attribute-value-to-style-map class="java.util.HashMap" />
+            <attribute-value-to-label-map class="java.util.HashMap" />
+          </style>
+          <style class="org.openjump.core.ccordsys.srid.SRIDStyle" enabled="true" srid="0" />
+          <style class="com.vividsolutions.jump.workbench.ui.renderer.style.BasicStyle" enabled="true">
+            <fill enabled="true">
+              <pattern class="com.vividsolutions.jump.workbench.ui.renderer.style.WKTFillPattern" enabled="false">
+                <properties>
+                  <properties>
+                    <mapping>
+                      <key class="java.lang.String">LINE WIDTH</key>
+                      <value class="java.lang.Integer">2</value>
+                    </mapping>
+                    <mapping>
+                      <key class="java.lang.String">PATTERN WKT</key>
+                      <value class="java.lang.String">GEOMETRYCOLLECTION(POINT EMPTY, MULTILINESTRING ((-8.485281374238571 2.8284271247461894, 2.8284271247461907 -8.48528137423857), (-5.656854249492381 5.65685424949238, 5.656854249492381 -5.65685424949238), (-2.8284271247461907 8.48528137423857, 8.485281374238571 -2.8284271247461894)))</value>
+                    </mapping>
+                    <mapping>
+                      <key class="java.lang.String">COLOR</key>
+                      <value class="java.awt.Color">153, 255, 153, 150</value>
+                    </mapping>
+                    <mapping>
+                      <key class="java.lang.String">EXTENT</key>
+                      <value class="java.lang.Integer">6</value>
+                    </mapping>
+                  </properties>
+                </properties>
+              </pattern>
+              <color>153, 255, 153, 255</color>
+            </fill>
+            <line enabled="true" width="1">
+              <pattern enabled="false">3</pattern>
+              <color>107, 178, 107, 255</color>
+            </line>
+            <alpha>150</alpha>
+          </style>
+          <style class="com.vividsolutions.jump.workbench.ui.renderer.style.SquareVertexStyle" enabled="false" size="4" filling="true" />
+          <style class="com.vividsolutions.jump.workbench.ui.renderer.style.LabelStyle" enabled="false">
+            <color>0, 0, 0, 255</color>
+            <attribute>$FID</attribute>
+            <angleAttribute />
+            <heightAttribute />
+            <font>Dialog, 0, 12</font>
+            <height>12.0</height>
+            <verticalAlignment>DEFAULT</verticalAlignment>
+            <scaled>false</scaled>
+            <overlappingLabelsHidden>true</overlappingLabelsHidden>
+            <outlineShowing>false</outlineShowing>
+            <outlineColor>230, 230, 230, 192</outlineColor>
+            <outlineWidth>4.0</outlineWidth>
+            <hideAtScale>false</hideAtScale>
+            <scaleToHideAt>20000.0</scaleToHideAt>
+            <horizontalAlignment>0</horizontalAlignment>
+            <horizontalPosition>CENTER</horizontalPosition>
+          </style>
+        </styles>
+        <feature-schema-operation>NULL</feature-schema-operation>
+      </layer>
+    </category>
+    <category name="Système" />
+  </layers>
+</project>
