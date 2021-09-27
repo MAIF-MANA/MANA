@@ -14,7 +14,7 @@ model SiFLo
 global {
 
 //***************************  VARIABLES **********************************************************************
-
+float toto;
 //	file mnt_file <- grid_file("../includes/LCred4.asc");
 	file mnt_file <- grid_file("../results/grid2.asc");
 	file my_data_flood_file <- csv_file("../includes/data_flood3.csv", ",");
@@ -75,6 +75,9 @@ global {
 
 	float river_broad_maint <- 3 #m;
 	float river_depth_maint<- 3 #m;
+	float river_broad_normal<- 1#m;
+	float river_depth_normal<-1#m;
+	float river_depth_max<-10#m;
 	float canal_deb_init <- 0.4;
 	float canal_deb_maint <- 0.8;
 	
@@ -115,19 +118,21 @@ global {
 	
 	//string scenario <- "S1" among: ["S1","S2","S3","S4"];
 	//string type_explo <- "normal" among: ["normal", "stochasticity"];
-	bool rain<-true;
+	bool rain<-false;
 	bool water_input<-true;
 	bool water_test<-true;
 	
 	float time_flood_test<-2#h;
-	float time_simulation<-5#h;
+	float time_simulation<-3#h;
 	
 	bool scen<-false;      //active ou desactive l'écran de selection des scnéario
 	bool creator_mode<-true;
-	bool only_flood<-true;
+	bool only_flood<-false;
+	bool nothing_more<-false;
 	int model_flow<-2; //1: siflo, 2:simplified, 3:other simplified
-	float rain_intensity_test<-1 #cm;
-	float water_input_test<-5*10^7#m3/#h;
+	float rain_intensity_test<-2 #cm;
+	float water_input_test<-100*10^8#m3/#h;
+	float default_plu_net<-0.1#m3/#s;
 	
 	bool plu_mod<-false;
 	list<rgb> color_category <- [ #darkgrey, #gold, #red];
@@ -251,7 +256,7 @@ float biodiversite;
 		//do load_parameters;
 
 		do create_natural_environment;
-		
+		do initiate_plu;
 		
 		if verbose {write "Natural environment created";}
 		ask cell {
@@ -260,7 +265,7 @@ float biodiversite;
 		}
 		
 		
-		do create_spe_riv;
+		
 		
 		
 		if verbose {write "Spe Riv created";}
@@ -362,6 +367,9 @@ float biodiversite;
 				do die;
 			}
 			my_cells <- cell overlapping self;
+			ask my_cells{
+				is_parking<-true;
+			}
 		}
 		
 		create pluvial_network from: rain_net_shape_file{
@@ -369,6 +377,10 @@ float biodiversite;
 				do die;
 			}
 			my_cells <- cell overlapping self;
+			ask my_cells{
+				is_pluvial_network<-true;
+				water_evacuation_pl_net<-default_plu_net;
+			}
 		}
 		
 		
@@ -454,28 +466,22 @@ float biodiversite;
 				do die;
 			}
 			list<cell> my_cells <- cell overlapping self;
-			ask my_cells {
+			ask my_cells where !each.is_parking {
 				is_sea<-true;
 				
 			}
 		}
+		
+	
 			
 		create river from:split_lines(waterways_shape_file.contents) {
 			if not (self overlaps world) {
 				do die;
 			}
-			ask institution {
-				ask river {
-					river_broad <-1 #m;  
-					river_depth <- 3#m;	
-					}
-				if river_maintenance {
-					ask river {
-						river_broad <- river_broad_maint;
-						river_depth <- river_depth_maint;}
-				}
+			
 	
-			}
+			
+
 			my_cells <- cell overlapping self;
 			ask my_cells {
 				add myself to: my_rivers;
@@ -495,6 +501,47 @@ float biodiversite;
 		}
 		
 		
+			float prev_alt<-500#m;
+		loop riv over:river_cells sort_by (each.location.x){
+				riv.river_broad<-river_broad_normal;
+				riv.altitude<-min([prev_alt+0.5#m,riv.altitude]);			
+				prev_alt<-riv.altitude;
+				ask riv.neighbors where (!each.is_river and each.altitude>prev_alt) {
+					altitude<-(altitude+2*prev_alt)/3; 
+					already<-true;
+					float alt<-altitude;
+					ask neighbors where (!each.is_river and !each.already and each.altitude>alt) {altitude<-(altitude+2*alt)/3;
+						float alt2<-altitude;
+						already<-true;
+						ask neighbors where (!each.is_river and !each.already and each.altitude>alt2) {altitude<-(altitude+2*alt2)/3;
+							float alt3<-altitude;
+							already<-true;
+				ask neighbors where (!each.is_river and !each.already and each.altitude>alt3) {altitude<-(altitude+2*alt3)/3;
+							float alt4<-altitude;
+							already<-true;
+				ask neighbors where (!each.is_river and !each.already and each.altitude>alt4) {altitude<-(altitude+2*alt4)/3;
+							already<-true;
+				
+				}
+						
+				}
+						
+				}
+				
+				
+				}
+				
+				}
+		}
+		
+		prev_alt<-500#m;
+		loop riv over:river_cells sort_by (each.location.x*100+each.location.y){
+				riv.river_altitude<-max([0,min([riv.altitude-river_depth_normal,prev_alt-20#cm])]);
+				riv.river_depth<-riv.altitude-riv.river_altitude;
+				prev_alt<-riv.river_altitude;
+		}
+		
+		
 	}
 	
 	action create_spe_riv {
@@ -504,7 +551,7 @@ float biodiversite;
 				cell_impacted<-cell where (each.is_river);
 				cell_impacted<-cell_impacted where (self overlaps each);
 				ask cell_impacted {
-					river_depth<-river_depth/1.5;
+					river_depth<-river_depth/1;
 					river_broad<-river_broad/2;
 				}
 			}
@@ -517,10 +564,13 @@ float biodiversite;
 				cell_impacted<-cell_impacted where (self overlaps each);
 				ask cell_impacted {
 					river_depth<-river_depth/2;
-					river_broad<-river_broad/1.5;
-			}
+					river_broad<-river_broad/1;
+					}
+			
+		}
 		}
 		
+		action initiate_plu {
 		// 0: urbain, 1: a urbaniser, 2:agricole, 3:nat, 4:mer 
 		create PLU from:plu_a_urb_shape_file {category<-1;}
 		create PLU from:plu_agri_shape_file {category<-2;}
@@ -556,10 +606,8 @@ float biodiversite;
 	
 
 		geometry rivers <- union(river collect each.shape);
-		//geometry canals <- union(canal collect each.shape);
 		using topology(world) {
 			active_cells <- cell where (((each.location distance_to rivers) <= max_distance_to_river));
-		//	active_cells <- active_cells + cell where (((each.location distance_to canals) <= max_distance_to_river));
 			ask active_cells {
 				is_active <- true;
 			}
@@ -570,13 +618,7 @@ float biodiversite;
 		}
 		
 		
-		float prev_alt<-500#m;
-		loop riv over:river_cells sort_by (each.location.x){
-				riv.river_broad<-1#m;
-				riv.river_depth<-min([riv.altitude,max([2#m,riv.altitude-(prev_alt-0.1#m)])]);
-				riv.river_altitude<-riv.altitude-riv.river_depth;
-				prev_alt<-riv.river_altitude;
-		}
+	
 		
 	}
 	
@@ -740,7 +782,20 @@ float biodiversite;
 	
 		}
 		
+		ask cell {do compute_permeability;}
+		do create_spe_riv;
+		
+	write ("nb d'habitants : "+length(people)*2.3);
+	write ("superficie du territoire :"+ world.shape.area #km);
+	write ("altitude maximale :"+ cell max_of(each.altitude));
 	
+	if nothing_more {
+		ask building {do die;}
+		ask road {do die;}
+		ask green_area {do die;}
+		ask parking {do die;}
+		ask natura {do die;}
+	}
 		
 	}
 	
@@ -760,8 +815,7 @@ float biodiversite;
 		average_building_state<-mean(building collect each.state);
 		flooded_car<-length(car where (each.domaged));
 		float proba_know_rules<-one_of(institution).DICRIM_information;
-		float  river_broad<-one_of(river).river_broad;
-		float  river_depth<-one_of(river).river_depth;
+
 	
 		
 		
@@ -803,9 +857,16 @@ float biodiversite;
 
 
 	reflex flower {
+ask cell where (each.water_height>1#cm and each.is_pluvial_network) {
+	water_volume<-max([0,water_volume-water_evacuation_pl_net*step]);
+}
+ask cell where (length(each.neighbors)<8) {
+water_volume<-max([0,water_volume*length(neighbors)/8]);
+}
 if model_flow=1 {do flowing1;}
 if model_flow>1 {do flowing2;}
 ask cell where (each.is_dyke and each.water_height>1#m) {do breaking_dyke;}
+
 }
 
 
@@ -818,9 +879,11 @@ ask cell where (each.is_dyke and each.water_height>1#m) {do breaking_dyke;}
 		if rain {
 			ask cell where !each.is_sea {
 			 	float rain_intensity <- float(data_rain[0, increment]) #mm;
-				 rain_intensity <- rain_intensity_test;
+				if water_test and time<=time_flood_test{ rain_intensity <- rain_intensity_test;
+				}
 				water_height<-water_height+rain_intensity*step/1#h;
-	
+				water_volume<-water_height*cell_area;
+				do compute_water_altitude;
 			}
 		
 		}
@@ -829,19 +892,25 @@ ask cell where (each.is_dyke and each.water_height>1#m) {do breaking_dyke;}
 		if water_input {
 			float debit_water <- float(data_flood[0, increment]) #m3/#h;
 			initial_water_level <- debit_water *step;
-			if water_test and time<=time_flood_test{	initial_water_level <- water_input_test*step/cell_area;}
+			if water_test and time<=time_flood_test{	
+				initial_water_level <- water_input_test*step/cell_area;
+			}
 			
 			
-			ask river_origin {
+			ask cell where (each.location.x=1 and each.location.x=1) {
+						cumul_water_enter<-cumul_water_enter+initial_water_level;	
+					water_volume<-water_volume+initial_water_level;
+					do compute_water_altitude;
+			} 
+		/* 	ask river_origin {
 				ask cell_origin  parallel: parallel_computation{
-					cumul_water_enter<-cumul_water_enter+initial_water_level;
-					
+					cumul_water_enter<-cumul_water_enter+initial_water_level;	
 					water_volume<-water_volume+initial_water_level;
 					do compute_water_altitude;
 								
 				}
 				
-			}
+			}*/
 		}
 		if benchmark {do add_data_benchmark_sub("World - flowing - step 2", machine_time - tt);tt <- machine_time;}
 		
@@ -904,10 +973,9 @@ ask cell where (each.is_dyke and each.water_height>1#m) {do breaking_dyke;}
 		float hmax<-cell max_of(each.water_height);
 		Vmax<-0.0;
 		if rain {
-			
-			ask active_cells parallel: parallel_computation {
-			 	float rain_intensity <- float(data_rain[0, increment]) #mm;
-				 rain_intensity <- rain_intensity_test;
+			ask active_cells where !each.is_sea parallel: parallel_computation {
+			// 	float rain_intensity <- float(data_rain[0, increment]) #mm;
+					float rain_intensity <- rain_intensity_test;
 				water_height<-water_height+rain_intensity*step/1#h;
 				 	water_volume<-water_height*cell_area;
 					do compute_water_altitude;
@@ -920,19 +988,25 @@ ask cell where (each.is_dyke and each.water_height>1#m) {do breaking_dyke;}
 		if water_input {
 			float debit_water <- float(data_flood[0, increment]) #m3/#h;
 			initial_water_level <- debit_water *step;
-			if water_test and time<=time_flood_test{	initial_water_level <- water_input_test*step/cell_area;}
+			if water_test and time<=time_flood_test{	
+				initial_water_level <- water_input_test*step/cell_area;
+			}
 			
 			
-			ask river_origin {
+			ask cell where (each.grid_x=0 and each.grid_y=0) {
+						cumul_water_enter<-cumul_water_enter+initial_water_level;	
+					water_volume<-water_volume+initial_water_level;
+					do compute_water_altitude;
+			} 
+		/* 	ask river_origin {
 				ask cell_origin  parallel: parallel_computation{
-					cumul_water_enter<-cumul_water_enter+initial_water_level;
-					
+					cumul_water_enter<-cumul_water_enter+initial_water_level;	
 					water_volume<-water_volume+initial_water_level;
 					do compute_water_altitude;
 								
 				}
 				
-			}
+			}*/
 		}
 		if benchmark {do add_data_benchmark_sub("World - flowing - step 2", machine_time - tt);tt <- machine_time;}
 		
@@ -951,14 +1025,17 @@ ask cell where (each.is_dyke and each.water_height>1#m) {do breaking_dyke;}
 		
 		
 			float ttt; if benchmark {ttt <- machine_time;}
-			ask active_cells parallel: parallel_computation{
-				already <- false;
-				if water_altitude=0.0 {already <- true;}
-				do compute_water_altitude;
+			ask cell parallel: parallel_computation{
+				if water_volume<=0.0 {already <- true;}
+				else {
+					already <- false;
+					do compute_water_altitude;
 			}
+			}
+			
 			if benchmark {do add_data_benchmark_sub("World - flowing - step 4 sub_step 1", machine_time - ttt);ttt <- machine_time;}
 		
-			list<cell> flowing_cell <- active_cells where (each.water_altitude > 0);
+			list<cell> flowing_cell <- cell where (each.water_volume>0);
 			list<cell> cells_ordered <- flowing_cell sort_by (each.water_altitude);
 			if benchmark {do add_data_benchmark_sub("World - flowing - step 4 sub_step 2", machine_time - ttt);ttt <- machine_time;}
 		
@@ -1437,7 +1514,7 @@ species institution {
 	float flood_informed_people <- 0.01;
 	float DICRIM_information <- 0.1;
 	bool canal_maintenance<-true;
-	bool river_maintenance<-true;
+	bool river_maintenance<-false;
 	
 }
 
@@ -1932,7 +2009,7 @@ species people skills: [moving] control:  simple_bdi {
 
 	plan protect_my_car intention: protect_car {
 		float t; if benchmark {t <- machine_time;}
-		
+		inside<-false;
 		current_stair <- 0;
 		nb_protect_car <- nb_protect_car+ 1;
 		nb_waiting <- nb_waiting - 1;	
@@ -1982,7 +2059,7 @@ species people skills: [moving] control:  simple_bdi {
 
 
 	action moving {
-		
+		inside<-false;
 		list<road> rd <- not_usable_roads where ((each distance_to self) < flooded_road_percep_distance) ;
 		if not empty(rd) {
 			loop r over: rd {
@@ -2055,7 +2132,10 @@ species people skills: [moving] control:  simple_bdi {
 
 	//***************************  APPARENCE  ********************************************************
 	aspect default {
-		draw cylinder(1 #m, 3 #m) color: my_color;
+		float haut;
+		if inside{haut<-10#m;} 
+		else {haut<-3#m;}
+		draw cylinder(1 #m, haut) color: my_color;
 	}
 
 }
@@ -2091,6 +2171,10 @@ grid cell neighbors: 8 file: mnt_file {
 	bool is_sea <- false;
 	bool is_dyke<-false;
 	bool is_natura<-false;
+	bool is_pluvial_network<-false;
+	bool is_parking<-false;
+	float water_evacuation_pl_net<-0.0;
+	float permeability<-0.0;
 	bool already;
 	float water_cell_altitude;
 	float river_altitude;
@@ -2115,6 +2199,8 @@ grid cell neighbors: 8 file: mnt_file {
 	
 	float K<-25.0; //coefficient de Strickler
 	float slope;
+	float water_abs<-0.0;
+	float water_abs_max<-0.01;
 	map<cell, float> delta_alt_neigh;
 	map<cell, float> slope_neigh;
 	list<cell> flow_cells;
@@ -2129,7 +2215,7 @@ grid cell neighbors: 8 file: mnt_file {
 	float volume_distrib;
 	float volume_distrib_cell;
 	bool is_flowed<-false;
-	
+	bool may_flow_cell;
 
 
 
@@ -2159,6 +2245,37 @@ grid cell neighbors: 8 file: mnt_file {
 		}
 	}
 	
+	
+	action compute_permeability {
+	if plu_typ=0 {
+		permeability<-0.01;
+		water_abs_max<-shape.area*3#cm;
+	}
+	if plu_typ=1 {
+		permeability<-0.45;
+		water_abs_max<-shape.area*20#cm;
+	}
+	if plu_typ=2 {
+		permeability<-0.55;
+		water_abs_max<-shape.area*40#cm;
+	}
+	if plu_typ=3 {
+		permeability<-0.90;
+		water_abs_max<-shape.area*60#cm;
+	}
+	}
+	
+	action absorb_water {
+	water_volume<-water_volume*(1-permeability);
+	water_abs<-water_abs+water_volume;
+	if water_abs>water_abs_max {permeability<-0.0;}
+	//permeability<-max([0,permeability-(water_abs_max-water_volume)/water_abs_max]);
+	}
+	
+	
+	
+	
+	
 	action compute_water_altitude {
 			if is_river {water_river_height<-min([water_volume/(sqrt(cell_area)*river_broad),river_depth]);}
 			else {water_river_height<-0.0;}
@@ -2183,8 +2300,8 @@ grid cell neighbors: 8 file: mnt_file {
 		slope_tot<-0.0;
 			slope<-0.0;
 			delta_alt_neigh <- neighbors as_map (each::max([0,(water_altitude-each.water_altitude)]));
-			slope_neigh <- neighbors as_map (each::max([0,(water_altitude-each.water_altitude)/sqrt(cell_area)]));
-			
+		//	slope_neigh <- neighbors as_map (each::max([0,(water_altitude-each.water_altitude)/sqrt(cell_area)]));
+			slope_neigh <- neighbors as_map (each::max([0,(water_altitude-(each.water_altitude-each.river_depth))/sqrt(cell_area)]));
 			
 			
 			loop det over:slope_neigh {
@@ -2213,7 +2330,7 @@ grid cell neighbors: 8 file: mnt_file {
 		do verify_river_full;
 		//We get all the cells already done
 		
-			int nb_neighbors<-length(neighbors);
+
 			list<cell> neighbour_cells_al <- neighbors where (each.already);
 
 			//If there are cells already done then we continue         
@@ -2235,7 +2352,6 @@ grid cell neighbors: 8 file: mnt_file {
 				Vmax<-max([V,Vmax]);			
 				dp<-V*step/repeat_time; //distance parcourue en 1 step
 				prop<-min([1,max([0.1,(dp-sqrt(cell_area))/sqrt(cell_area)])]); //proportion eau transmise
-			//	water_volume<-wac*sqrt(cell_area);
 				volume_distrib<-max([0,water_volume*prop]);
 				
 				
@@ -2251,7 +2367,21 @@ grid cell neighbors: 8 file: mnt_file {
 					ask neighbour_cells_al {do compute_water_altitude;	}
 																					
 					//The water of the cells will flow to the neighbour cells which have a height less than the height of the actual cell
-					flow_cells <- (neighbour_cells_al where ((self.water_altitude > each.water_altitude) and (self.water_altitude > (each.altitude+each.dyke_height-each.river_depth))));					
+					
+					ask neighbour_cells_al {
+						may_flow_cell<-false;
+						if myself.water_altitude > water_altitude {
+							if is_river_full {
+								if (myself.water_altitude > (altitude+dyke_height-river_depth)) {may_flow_cell<-true;	}	
+							}
+							if !is_river_full {
+								if (myself.water_altitude > (altitude-river_depth)) {may_flow_cell<-true;	}	
+							}
+
+						}
+					}
+				//	flow_cells <- (neighbour_cells_al where ((self.water_altitude > each.water_altitude) and (self.water_altitude > (each.altitude+each.dyke_height-each.river_depth))));
+					flow_cells <- (neighbour_cells_al where (each.may_flow_cell));					
 				//If there are cells, we compute the water flowing
 					if (!empty(flow_cells)) {			
 						
@@ -2260,7 +2390,7 @@ grid cell neighbors: 8 file: mnt_file {
 						//ask flow_cells {slopetot<-slopetot+max([0.05,myself.altitude-self.altitude]);}
 						is_flowed<-true;
 					float prop_flow;
-					prop_flow<-1/length(flow_cells);
+					//prop_flow<-1/length(flow_cells);
 					
 					float slope_sum<-flow_cells sum_of(slope_neigh[each]);
 
@@ -2268,12 +2398,9 @@ grid cell neighbors: 8 file: mnt_file {
 						
 							if slope_sum>0 {prop_flow<-myself.slope_neigh[self]/slope_sum;}
 								else {prop_flow<-0.0;}
-								
-								//myself.slope_neigh[self]/myself.slope_tot;
-							
-						
 							volume_distrib_cell<-myself.volume_distrib*prop_flow;
-							water_volume <- water_volume + volume_distrib_cell;	
+							water_volume <- water_volume + volume_distrib_cell;
+							do absorb_water;	
 							do compute_water_altitude;
 	
 						} 
@@ -2310,55 +2437,42 @@ grid cell neighbors: 8 file: mnt_file {
 		if (water_height>1#cm or water_river_height>1#cm ) {
 		do compute_water_altitude;	
 		do verify_river_full;
-			int nb_neighbors<-length(neighbors);
-		//	list<cell> neighbour_cells_al <-  agents_at_distance(dp) of_species cell where (each.already);     
+			int nb_neighbors<-length(neighbors);   
 			list<cell> neighbour_cells_al <- neighbors where (each.already);
-			list<cell> cell_to_flow;
-			do compute_slope;
-			wac<-water_river_height*river_broad+sqrt(cell_area)*water_height;
-			wpc<-2*(water_river_height+river_broad+sqrt(cell_area)+water_height); 
-			rh<-wac/(2*wpc);
-			V<-min([max_speed,max([0.1,rh^(2/3)*K*slope^(1/2)])]);	
-			Vmax<-max([V,Vmax]);			
+			list<cell> cell_to_flow;		
+			V<-3#m/#s;
 			dp<-V*step; //distance parcourue en 1 step
-			volume_distrib<-water_volume;
+			prop<-min([1,max([0.1,(dp-sqrt(cell_area))/sqrt(cell_area)])]); //proportion eau transmise
+			volume_distrib<-max([0,water_volume*prop]);
 			float w_a<-water_altitude;
+			add self to:cell_to_flow;
 			ask neighbour_cells_al {
+				do absorb_water;	
 				do compute_water_altitude;
-				if (w_a > water_altitude and (w_a > (altitude+obstacle_height-river_depth))) {
-					add myself to:cell_to_flow;
+				if (is_river_full and w_a > water_altitude and (w_a > (altitude+obstacle_height-river_depth))) or (!is_river_full and w_a > water_altitude and (w_a > (altitude-river_depth))) {
+					add self to:cell_to_flow;
 					ask neighbors where (each.already) {
-						if (w_a > water_altitude and (w_a > (altitude+obstacle_height-river_depth))) {
+						if (is_river_full and w_a > water_altitude and (w_a > (altitude+obstacle_height-river_depth))) or (!is_river_full and w_a > water_altitude and (w_a > (altitude-river_depth))) {
 							add myself to:cell_to_flow;
-						/*	ask neighbors where (each.already) {
-								if (w_a > water_altitude and (w_a > (altitude+obstacle_height-river_depth))) {
-									add myself to:cell_to_flow;
-							 		ask neighbors where (each.already) {
-										if (w_a > water_altitude and (w_a > (altitude+obstacle_height-river_depth))) {
-										add myself to:cell_to_flow;
-										ask neighbors where (each.already) {
-											if (w_a > water_altitude and (w_a > (altitude+obstacle_height-river_depth))) {
-											add myself to:cell_to_flow;	
-										}
-										}
-									}
-									}
-					
+							ask neighbors where (each.already) {
+								if (is_river_full and w_a > water_altitude and (w_a > (altitude+obstacle_height-river_depth))) or (!is_river_full and w_a > water_altitude and (w_a > (altitude-river_depth))) {
+									add myself to:cell_to_flow;					
 								}
-								}*/
+								}
 							}
 							}
 						}
 			}
 
-					flow_cells <- remove_duplicates(cell_to_flow);					
+					flow_cells <- remove_duplicates(cell_to_flow);	
+				//	remove self from:(cell_to_flow);					
 					if (!empty(flow_cells)) {			
 						is_flowed<-true;
 						float prop_flow;
-						prop_flow<-1/length(flow_cells);
+						prop_flow<-1/length(flow_cells);						
 						float slope_sum<-flow_cells sum_of(slope_neigh[each]);
 						ask flow_cells {
-							volume_distrib_cell<-myself.volume_distrib*prop_flow;
+							volume_distrib_cell<-with_precision(myself.volume_distrib*prop_flow,4);
 							water_volume <- water_volume + volume_distrib_cell;	
 							do compute_water_altitude;
 						} 
@@ -2375,7 +2489,7 @@ grid cell neighbors: 8 file: mnt_file {
 	//Action to flow the water 
 	action flow3 {
 		is_flowed<-false;
-		if (water_height>1#cm or water_river_height>1#cm ) {
+		if (water_height>0.5#cm or water_river_height>0.5#cm ) {
 		do compute_water_altitude;	
 		do verify_river_full;
 			int nb_neighbors<-length(neighbors);
@@ -2390,7 +2504,22 @@ grid cell neighbors: 8 file: mnt_file {
 				volume_distrib<-water_volume;
 				if (!empty(neighbour_cells_al)) {
 					ask neighbour_cells_al {do compute_water_altitude;	}
-					flow_cells <- (neighbour_cells_al where ((self.water_altitude > each.water_altitude) and (self.water_altitude > (each.altitude+each.dyke_height-each.river_depth))));					
+					
+						
+					ask neighbour_cells_al {
+						may_flow_cell<-false;
+						if myself.water_altitude > water_altitude {
+							if is_river_full {
+								if (myself.water_altitude > (altitude+dyke_height-river_depth)) {may_flow_cell<-true;	}	
+							}
+							if !is_river_full {
+								if (myself.water_altitude > (altitude-river_depth)) {may_flow_cell<-true;	}	
+							}
+
+						}
+					}
+				//	flow_cells <- (neighbour_cells_al where ((self.water_altitude > each.water_altitude) and (self.water_altitude > (each.altitude+each.dyke_height-each.river_depth))));
+					flow_cells <- (neighbour_cells_al where (each.may_flow_cell));	
 					if (!empty(flow_cells)) {			
 						is_flowed<-true;
 						float prop_flow;
@@ -2399,6 +2528,7 @@ grid cell neighbors: 8 file: mnt_file {
 						ask flow_cells {
 							volume_distrib_cell<-myself.volume_distrib*prop_flow;
 							water_volume <- water_volume + volume_distrib_cell;	
+							do absorb_water;	
 							do compute_water_altitude;
 						} 
 				 		water_volume <- water_volume - volume_distrib;
@@ -2422,25 +2552,12 @@ grid cell neighbors: 8 file: mnt_file {
 			/* 	if is_canal {
 			color <- #mediumseagreen;
 		}*/
-		
-		if water_height>5#cm {
-		val_water <- max([0, min([255, int(255 * (1 - (water_height / 10#cm)))])]);
+			
+		if water_height>1#cm or water_river_height>1#cm {
+		val_water <- max([0, min([200, int(200 * (1 - (water_height / 100#cm)))])]);
 		color <- rgb([val_water, val_water, 255]);
 		}
-		
-		if !is_river_full and water_river_height>1#cm  {color <-#deepskyblue;}
-		if (is_sea) {color<-# blue;}
-		
-		
-		
-	/*	if (is_river) {color<-# lightblue;}
-	
-		
-		if water_river_height>5#cm and !is_sea {color <- #deepskyblue;}
-		
-	//	if is_dyke{color<-#darkcyan;	}
-		if water_height>5#cm and !(flooded_cell contains(self)) and !is_sea {add self to:flooded_cell;}
-		if flooded_cell contains(self) {color <- #blue;} */
+		if (is_sea) {color<-#blue;}
 	}
 
 	aspect map {
@@ -2448,8 +2565,14 @@ grid cell neighbors: 8 file: mnt_file {
 //		if is_dyke{	draw rectangle(sqrt(cell_area)#m,3#m) depth:dyke_height rotate:45 color:#darkcyan;	}
 	//	if !plu_mod {draw shape  depth:altitude+water_height color: color border: #black;	}
 		if !plu_mod {draw shape   color: color ;	}
-		else {draw shape color: color_plu;	}
+		else {draw shape  color: color_plu;	}
 		
+		//draw square(sqrt(cell_area)) color:color depth:water_altitude ;
+
+	}
+
+	aspect map3D {		
+		draw square(sqrt(cell_area)) color:color depth:altitude ;
 
 	}
 
@@ -2478,15 +2601,9 @@ experiment Benchmark type: gui autorun:true {
 }
 
 experiment "Simulation" type: gui {
-//	parameter "scenario" var:scenario ;
-//	parameter "type_explo" var:type_explo;
 	
 	output {
 		display map type: opengl background: #black draw_env: false {
-		//si vous voulez afficher le mnt
-			//image "../includes/background.png" transparency: 0.3 refresh: false;
-		//	agents active_cells value: active_cells;
-	
 			grid cell  triangulation:false refresh: true ;
 			species cell  refresh: true aspect:map;
 			species green_area;	
@@ -2497,7 +2614,14 @@ experiment "Simulation" type: gui {
 			species obstacle;
 			species river;
 			species people;
-			species car;			
+			species car;	
+			}
+			
+				display map3D type: opengl background: #black draw_env: false {
+			grid cell  triangulation:false refresh: true ;
+			species cell  refresh: true aspect:map3D;				
+		
+		
 		}
 		/* 
 		display charts refresh: every(10 #mn) {
@@ -2580,48 +2704,4 @@ experiment "Simulation" type: gui {
 	
 	
 	
-	/*
-	experiment 'test flood gui'  {
-		init {
-			create simulation with:[scenario::"S3"];
-		}
-		output {
-			display charts refresh: every(10 #mn) {
-			chart "Water level "{
-				data "Water level" value: cell sum_of (each.water_height) color: #blue;
-			}
-			
-			
-			}
-		}
-		
-	}
 	
-	experiment 'test flood' type: batch  repeat:3 keep_seed:true keep_simulations: false until:(end_simul) {
-		parameter scenar var: scenario among: ["S1","S3"];
-		//parameter type_explo var:type_explo <- "normal";
-	}
-	
-	experiment 'test scenar 4 simulation' type: batch  repeat:2 keep_seed:true keep_simulations: false until:(end_simul) {
-		parameter scenar var: scenario among: ["S1","S2","S3","S4"];
-		//parameter type_explo var:type_explo <- "normal";
-	}
-	
-	
-// This experiment runs the simulation 5 times.
-// At the end of each simulation, the people agents are saved in a shapefile
-experiment 'Run 100 simulation' type: batch repeat:100 keep_seed:false until:(end_simul) keep_simulations: false{
-	
-	 
-	// the reflex will be activated at the end of each run; in this experiment a run consists of the execution of 5 simulations (repeat: 5)
-	/*reflex end_of_runs
-	{
-		int cpt <- 0;
-		// each simulation of the run is an agent; it is possible to access to the list of these agents by using the variable "simulations" of the experiment. 
-		// Another way of accessing to the simulations consists in using the name of model + _model: here "batch_example_model"
-		//in this example, we ask all the simulation agents of the run to save (at the end of the simulation) the people population in a shapefile with their is_infected and is_immune attributes 
-		ask simulations
-		{
-	cpt <- cpt + 11;
-		}
-	}*/
