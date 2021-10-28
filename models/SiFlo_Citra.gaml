@@ -89,6 +89,7 @@ float toto;
 	bool end_simul<-false;
 	int leaving_people <- 0;
 
+	bool mode_flood<-false;
 	
 	list<cell> flooded_cell;
 	int nb_flooded_cell;
@@ -141,7 +142,8 @@ float toto;
 	map<people,string> dead_how;
  
 
-//******************indicateurs *******************
+//******************indicateurs et critères *******************
+//indicateurs
 float espace_vert; //nécessaire ?
 float ratio_espace_vert;
 float densite;
@@ -150,12 +152,14 @@ float invest_espace_public;
 int services;
 int commerces;
 int entreprise;
-float budget_env;
-float entretien_reseau_plu;
+float taux_budget_env;
+float entretien_reseau_plu<-0.2;
 int dead_people_inside <- 0;
 int dead_people_outside <- 0;
+int dead_people<-0;
 int injuried_people_inside;
 int injuried_people_outside;
+int injuried_people<-10;
 int flooded_building;
 float average_building_state;
 int flooded_car;
@@ -168,9 +172,37 @@ float satisfaction;
 float indem;
 float documents;
 float biodiversite;
+float routes_inondees;
+
+//poids indicateurs
+int W_invest_espace_public<-1;
+int W_cout_vie<-2;
+int W_entretien_reseau_plu<-1;
+int W_taux_budget_env<-2;
 
 
+//critere
+int Crit_environnement; //0: nul à 5 : top
+int Crit_logement; //0: nul à 5 : top
+int Crit_logement1; //0: nul à 5 : top
+int Crit_logement2; //0: nul à 5 : top
+int Crit_infrastructure; //0: nul à 5 : top
+int Crit_economie; //0: nul à 5 : top
+int Crit_cycle_eau;
+int Crit_satisfaction;
+int Crit_biodiversite;
+int Crit_bilan_humain;
+int Crit_bilan_materiel;
+int Crit_reconstruction;
+int Crit_pol_environnement;
+int Crit_pol_environnement1;
+int Crit_pol_environnement2;
 
+
+//jeux
+int budget_total<-100;
+int budget_espace_public<-20;
+int budget_env<-10;
 
 
 //***************************  PREDICAT and EMOTIONS  ********************************************************
@@ -237,6 +269,47 @@ float biodiversite;
 	
 	//emotion
 	emotion fear <- new_emotion("fear");
+	
+	
+	
+	
+	//********************* RADAR ********************************
+	
+	list<geometry> axis <- define_axis();
+	int val_min <- 0;
+	int val_max <- 5;
+	list<string> axis_labelDD <- ["Cycle de l'eau", "Satisfaction de la population", "Biodiversité"];
+	list<string> axis_labelSec <- ["Bilan humain", "Bilan matériel", "reconstruction"];
+	list<string> axis_labelAtt <- ["Environnement", "Logement", "Infrastructure", "Economie"];
+	list<string> axis_label;
+	float marge <- 0.1;
+	int rad_nb<-1;   //1: DD, 2: Sec, 3: Att
+	
+	list<geometry> define_axis {
+		list<geometry> gs;
+		if rad_nb=1 {axis_label<-axis_labelDD;}
+		if rad_nb=2 {axis_label<-axis_labelSec;}
+		if rad_nb=3 {axis_label<-axis_labelAtt;}
+		write rad_nb;
+		float angle_ref <- 360 / length(axis_label);
+		float marge_dist <- world.shape.width * marge;
+		loop i from: 0 to: length(axis_label) - 1 {
+			geometry g <- (line({0, world.shape.height / 2}, {0, marge_dist}) rotated_by (i * angle_ref));
+			g <- g at_location (g.location + world.location - first(g.points));
+			gs << g;
+		}
+		return gs;
+	}
+
+	list<point> define_surface (list<float> values) {
+		list<point> points;
+		loop i from: 0 to: length(values) - 1 {
+			float prop <- (values[i] - val_min) / (val_max - val_min);
+			points << first(axis[i].points) + (last(axis[i].points) - first(axis[i].points)) * prop;
+		}
+		return points;
+	}
+	
 	
 	
 	
@@ -804,12 +877,30 @@ float biodiversite;
 
 	//***************************  REFLEX GLOBAL **********************************************************************
 	
+	reflex mode {
 	
-	reflex garbage_collector when: every(30 #mn) {
+	if mode_flood {
+		
+		if (time mod 30#mn) = 0 {do garbage_collector;}   //every(30 #mn)
+		if (time mod 60#mn) = 0 {do update_flood;} //every(#hour) 
+		do flower;
+		do update_road;
+		if (time mod display_every) = 0 {if benchmark{do write_benchmark;} //when:  every(display_every)
+		}
+	}	
+	
+	if !mode_flood {
+		write ("Mode Gestion");
+		do update_indicators; 
+	}
+	
+	}
+	
+	action garbage_collector  {
 		ask experiment {do compact_memory;}
 	}
 	
-	reflex update_flood when: every(#hour) {
+	action update_flood {
 		float t; if benchmark {t <- machine_time;}
 		flooded_building<-length(building where (each.serious_flood));
 		average_building_state<-mean(building collect each.state);
@@ -856,7 +947,7 @@ float biodiversite;
 	}
 
 
-	reflex flower {
+	action flower {
 ask cell where (each.water_height>1#cm and each.is_pluvial_network) {
 	water_volume<-max([0,water_volume-water_evacuation_pl_net*step]);
 }
@@ -1066,7 +1157,7 @@ ask cell where (each.is_dyke and each.water_height>1#m) {do breaking_dyke;}
 		if benchmark {do add_data_benchmark("World - flowing", machine_time - t);}
 	}
 
-	reflex update_road {
+	action update_road {
 		float t; if benchmark {t <- machine_time;}
 		
 		current_weights <- road as_map (each::each.shape.perimeter / each.speed_coeff);
@@ -1075,7 +1166,7 @@ ask cell where (each.is_dyke and each.water_height>1#m) {do breaking_dyke;}
 		}
 	}
 	
-	reflex write_benchmark when: benchmark and every(display_every){
+	action write_benchmark {
 		write "\nCycle:" + cycle + " Total time taken (in s) : " + ((machine_time - init_time) / 1000.0) + " - measured: " + (sum(time_taken_main.values) / 1000.0) ;
 		write " ** Main step :";
 		loop id over: (time_taken_main.keys) sort_by (-1 * time_taken_main[each]){
@@ -1091,27 +1182,168 @@ ask cell where (each.is_dyke and each.water_height>1#m) {do breaking_dyke;}
 
 action update_indicators {
 	//******************indicateurs *******************
-//environnement<- length(cell  where (each.plu_typ=2))/length(cell  where (each.plu_typ=0)); //espace vet/espace urbain
 
 //float espace_vert; //nécessaire ?
 ratio_espace_vert<-length(cell  where (each.plu_typ=2))/length(cell  where (each.plu_typ=0));
 densite<-length(people)/world.shape.area;
-//cout_vie
-// invest_espace_public;
+cout_vie<-(building where (each.category=0)) mean_of(each.prix_moyen)/length(people);
+invest_espace_public<-budget_espace_public/budget_total; //augmente quand inv dans espace public
  services<-length(building where (each.category=2));
-// commerces;
-//entreprise;
-//budget_env
+ commerces<-length(building where (each.category=1));
+taux_budget_env<-budget_espace_public/budget_total;    //augmente quand inv dans env
+//entretien_reseau_plu; //Linéaire de réseau entretenu divisé par le linéaire total, multiplié par 100 (par action à chaque tour)
 taux_artificilisation<-(building sum_of (each.shape.area)+parking sum_of (each.shape.area)+road sum_of (each.shape.perimeter*4#m))/world.shape.area;
+dead_people<-dead_people_inside+dead_people_outside;
+injuried_people<-injuried_people_inside+injuried_people_outside;
+//flooded_building;
+routes_inondees<-road where (each.is_flooded) sum_of(each.shape.perimeter);
+//flooded_car;
+biodiversite<-(length(cell  where (each.plu_typ=3))+0.2*length(cell  where (each.plu_typ=2)))/length(cell); // à modifier
+satisfaction<-people mean_of(each.satisfaction);
+
+
+
+//****************critere ******************
+
+if ratio_espace_vert<0.025 {Crit_environnement<-0;}
+else {if ratio_espace_vert<0.035 {Crit_environnement<-1;}
+	else {if ratio_espace_vert<0.037 {Crit_environnement<-2;}
+		else {if ratio_espace_vert<0.041 {Crit_environnement<-3;}
+			else {if ratio_espace_vert<0.045 {Crit_environnement<-4;}
+				else {Crit_environnement<-5;}
+			}
+		}
+}
+}
+
+// a voir comment considerer les indicateurs liés
+if cout_vie<0.1 {Crit_logement1<-5;}
+else {if cout_vie<0.13 {Crit_logement1<-4;}
+	else {if cout_vie<0.15 {Crit_logement1<-3;}
+		else {if cout_vie<0.18 {Crit_logement1<-2;}
+			else {if cout_vie<0.20 {Crit_logement1<-1;}
+				else {Crit_logement1<-0;}
+			}
+		}
+}
+}
+
+
+if services<20 {Crit_infrastructure<-0;}
+else {if services<25 {Crit_infrastructure<-1;}
+	else {if services<30 {Crit_infrastructure<-2;}
+		else {if services<35 {Crit_infrastructure<-3;}
+			else {if services<40{Crit_infrastructure<-4;}
+				else {Crit_infrastructure<-5;}
+			}
+		}
+}
+}
+
+if commerces<250 {Crit_economie<-0;}
+else {if commerces<270 {Crit_economie<-1;}
+	else {if commerces<280 {Crit_economie<-2;}
+		else {if commerces<290 {Crit_economie<-3;}
+			else {if commerces<330{Crit_economie<-4;}
+				else {Crit_economie<-5;}
+			}
+		}
+}
+}
+
+if satisfaction<0.2 {Crit_satisfaction<-0;}
+else {if satisfaction<0.4 {Crit_satisfaction<-1;}
+	else {if satisfaction<0.55 {Crit_satisfaction<-2;}
+		else {if satisfaction<0.65 {Crit_satisfaction<-3;}
+			else {if satisfaction<0.75{Crit_satisfaction<-4;}
+				else {Crit_satisfaction<-5;}
+			}
+		}
+}
+}
+
+ 
+ if taux_artificilisation>0.15 {Crit_cycle_eau<-0;}
+else {if taux_artificilisation>0.12 {Crit_cycle_eau<-1;}
+	else {if taux_artificilisation<0.11 {Crit_cycle_eau<-2;}
+		else {if taux_artificilisation<0.10 {Crit_cycle_eau<-3;}
+			else {if taux_artificilisation<0.08{Crit_cycle_eau<-4;}
+				else {Crit_cycle_eau<-5;}
+			}
+		}
+}
+}
+ 
+ if biodiversite<0.01 {Crit_biodiversite<-0;}
+else {if biodiversite<0.014 {Crit_biodiversite<-1;}
+	else {if biodiversite<0.016 {Crit_biodiversite<-2;}
+		else {if biodiversite<0.020 {Crit_biodiversite<-3;}
+			else {if biodiversite<0.024{Crit_biodiversite<-4;}
+				else {Crit_biodiversite<-5;}
+			}
+		}
+}
+}
+
+if invest_espace_public<0.08 {Crit_logement2<-0;}
+else {if invest_espace_public<0.13 {Crit_logement2<-1;}
+	else {if invest_espace_public<0.18 {Crit_logement2<-2;}
+		else {if invest_espace_public<0.22 {Crit_logement2<-3;}
+			else {if ratio_espace_vert<0.3 {Crit_logement2<-4;}
+				else {Crit_logement2<-5;}
+			}
+		}
+}
+}
+
+if taux_budget_env<0.04 {Crit_pol_environnement1<-0;}
+else {if taux_budget_env<0.07 {Crit_pol_environnement1<-1;}
+	else {if taux_budget_env<0.09 {Crit_pol_environnement1<-2;}
+		else {if taux_budget_env<0.012 {Crit_pol_environnement1<-3;}
+			else {if taux_budget_env<0.018 {Crit_pol_environnement1<-4;}
+				else {Crit_pol_environnement1<-5;}
+			}
+		}
+}
+}
+
+
+if entretien_reseau_plu<0.04 {Crit_pol_environnement2<-0;}
+else {if entretien_reseau_plu<0.07 {Crit_pol_environnement2<-1;}
+	else {if entretien_reseau_plu<0.09 {Crit_pol_environnement2<-2;}
+		else {if entretien_reseau_plu<0.012 {Crit_pol_environnement2<-3;}
+			else {if entretien_reseau_plu<0.018 {Crit_pol_environnement2<-4;}
+				else {Crit_pol_environnement2<-5;}
+			}
+		}
+}
+}
+
+
+
+Crit_logement<-round((Crit_logement1*W_cout_vie+Crit_logement2*W_invest_espace_public)/(W_cout_vie+W_invest_espace_public));
+Crit_environnement<-round((Crit_pol_environnement1*W_taux_budget_env+Crit_pol_environnement2*W_entretien_reseau_plu)/(W_entretien_reseau_plu+W_taux_budget_env));
+
+//;
+//  biodiversite_crit;
+
+
+/*Environnement
+Logement; //0: nul à 5 : top
+Infrastructure; //0: nul à 5 : top
+Economie; //0: nul à 5 : top
+
+*/
+
 
 /*float entreprise;
 float budget_env;
-float entretien_reseau_plu;
+
 int dead_people_inside <- 0;
-int dead_people_outside <- 0;
+int  <- 0;
 int injuried_people_inside;
 int injuried_people_outside;
-int flooded_building;
+int 
 float average_building_state;
 int flooded_car;
 float flooded_road;
@@ -1120,8 +1352,7 @@ float delai_rep_bat;
 float taux_desimper; //nécessaire ?
 float taux_artificilisation;
 float satisfaction;
-float indem;
-float documents;
+
 float biodiversite;*/
 }
 
@@ -1229,7 +1460,9 @@ action create_obstacle {
 }
 
 
-	user_command "visualisation plu/relief" action:vizu_chnge;
+
+user_command "visualisation plu/relief" action:vizu_chnge;
+user_command "mode gestion/mode inondation" action:mode_chnge;
 	
 	action vizu_chnge {
 		if plu_mod {
@@ -1241,6 +1474,22 @@ action create_obstacle {
 			ask cell {do see_plu;}
 		}
 	}
+	
+	
+	
+		action mode_chnge {
+		if mode_flood {
+			mode_flood<-false;
+			write "mode gestion";
+		}
+		else {
+			step <-  time_step; 
+			
+			mode_flood<-true;
+			write "mode inondation";
+		}
+	}
+	
 
 }
 //***************************  END of GLOBAL **********************************************************************
@@ -1335,6 +1584,7 @@ species road {
 	list<cell> my_cells;
 	bool usable <- true;
 	float speed_coeff <- 1.0 min: 0.01;
+	bool is_flooded;
 
 	action update_flood {
 		cell_water_max <- max(my_cells collect each.water_height);
@@ -1404,6 +1654,7 @@ species pluvial_network {
 species building {
 	string type;
 	int category; //0: residentiel, 1: commerce, 2:erp
+	float prix_moyen<-2000.0;
 	list<cell> my_cells;
 	list<cell> my_neighbour_cells;
 	float altitude;
@@ -1551,6 +1802,16 @@ species people skills: [moving] control:  simple_bdi {
 	int friends_to_inform_to_select;
 	list<people> friends_to_inform;
 	
+	
+	
+	float satisfaction<-0.5; //0: not satisfy at all, 1: very satisfied
+	
+	
+	
+	
+	
+	
+	
 	float water_height_danger_car <- (10 + rnd(30)) #cm;
 	float water_height_danger_pied <- (10 + rnd(90)) #cm;
 	
@@ -1609,6 +1870,7 @@ species people skills: [moving] control:  simple_bdi {
 
 	//***************************  perception ********************************
 	reflex my_perception {
+		if mode_flood {
 		float t; if benchmark {t <- machine_time;}
 		fear_level <- has_emotion(fear) ? get_emotion(fear).intensity : 0.0;
 		strength_do_nothing <-  0.25 - fear_level;
@@ -1665,6 +1927,13 @@ species people skills: [moving] control:  simple_bdi {
 		if benchmark {ask world {do add_data_benchmark("people - perception", machine_time - t);}}
 	}
 	
+	
+	do test_proba; //when: (time mod 10#mn) = 0
+	do agenda; // when:(time mod outside_test_period) = 0
+	do fear_contagion; // when: (time mod 30#mn) = 0
+	
+	}
+	
 	action increase_life_at_stake(float prev_water_level) {
 		if (water_level >= (prev_water_level + 1 #cm)) {
 			do add_uncertainty(life_at_stake, coeff_life_at_stake_water_increase *(water_level -prev_water_level) );
@@ -1707,7 +1976,7 @@ species people skills: [moving] control:  simple_bdi {
 		}
 	}
 	
-	reflex test_proba when: (time mod 10#mn) = 0 {
+	action test_proba  {
 		float t; if benchmark {t <- machine_time;}
 		if flip(max_danger_outside) or flip(max_danger_inside) {
 			do to_die;
@@ -1719,7 +1988,7 @@ species people skills: [moving] control:  simple_bdi {
 	}
 	
 		
-	reflex agenda when:(time mod outside_test_period) = 0{
+	action agenda{
 		float t; if benchmark {t <- machine_time;}
 		if flip(0.3) {do add_belief(need_to_go_outside);}
 		
@@ -1754,7 +2023,7 @@ species people skills: [moving] control:  simple_bdi {
 
 	
 		//if the agent perceives other people agents in their neighborhood that have fear, it can be contaminate by this emotion
-	reflex fear_contagion when: (time mod 30#mn) = 0{
+	action fear_contagion {
 		float t; if benchmark {t <- machine_time;}
 		ask people at_distance fear_contagion_distance  {
 			emotional_contagion emotion_detected:fear ;
@@ -2698,6 +2967,178 @@ experiment "Simulation" type: gui {
 			species button aspect:normal ;
 			event mouse_down action:activate_act;    
 		}
+		
+		
+		
+		display "Indicateurs"
+		{
+			
+		
+		
+			//Attractivité
+			graphics "radars axis" 
+			size: {0.4,0.4}  position: {0, 0}
+			refresh: false{
+					axis_label<-axis_labelAtt;
+					rad_nb<-3;//1: DD, 2: Sec, 3: Att
+					write length(axis);
+					loop i from: 0 to: length(axis) -1 {
+					write "toto";
+					geometry a <- axis[i];
+					draw a + 0.1 color: #black end_arrow: 2.0;
+					point pt <- first(axis[i].points) + (last(axis[i].points) - first(axis[i].points)) * 1.1;
+					draw axis_labelDD[i]  at: pt anchor: #center font: font("Helvetica", 10, #bold) color: #black;
+					
+				}
+			}
+
+			graphics "radars surface" 
+			size: {0.4,0.4} position: {0.4, 0.5}
+			transparency: 0.5 {
+				list<int> values <- [Crit_cycle_eau, Crit_satisfaction, Crit_biodiversite];
+				list<point> points <- world.define_surface(values);
+				geometry surface <- polygon(points);
+				draw surface color: #yellow border: #orange;
+				loop i from: 0 to: length(axis) -1 {
+					float angle <- (first(axis[i].points) towards last(axis[i].points)) ;
+					if angle > 90 or angle < - 90{
+						angle <- angle - 180;
+					}
+					float dist <- 1.0;
+					point shift_pt <- {cos(angle + 90) * dist, sin(angle + 90) * dist};	
+		
+					point pt <- points[i] + shift_pt;
+					
+					draw string(values[i])  at: pt anchor: #center font: font("Helvetica", 10, #bold) color: #black;
+					
+				}
+			}
+		
+		
+		
+			
+			//Développement durable
+			graphics "radars axis" 
+			size: {0.4,0.4} position: {0.4, 0.5}
+			refresh: false{
+					rad_nb<-1;//1: DD, 2: Sec, 3: Att
+					
+					loop i from: 0 to: length(axis) -1 {
+					geometry a <- axis[i];
+					draw a + 0.1 color: #black end_arrow: 2.0;
+					point pt <- first(axis[i].points) + (last(axis[i].points) - first(axis[i].points)) * 1.1;
+					draw axis_labelDD[i]  at: pt anchor: #center font: font("Helvetica", 10, #bold) color: #black;
+					
+				}
+			}
+
+			graphics "radars surface" 
+			size: {0.4,0.4} position: {0.4, 0.5}
+			transparency: 0.5 {
+				list<int> values <- [Crit_cycle_eau, Crit_satisfaction, Crit_biodiversite];
+				list<point> points <- world.define_surface(values);
+				geometry surface <- polygon(points);
+				draw surface color: #yellow border: #orange;
+				loop i from: 0 to: length(axis) -1 {
+					float angle <- (first(axis[i].points) towards last(axis[i].points)) ;
+					if angle > 90 or angle < - 90{
+						angle <- angle - 180;
+					}
+					float dist <- 1.0;
+					point shift_pt <- {cos(angle + 90) * dist, sin(angle + 90) * dist};	
+		
+					point pt <- points[i] + shift_pt;
+					
+					draw string(values[i])  at: pt anchor: #center font: font("Helvetica", 10, #bold) color: #black;
+					
+				}
+			}
+		
+		
+		
+			//Sécurité
+			graphics "radars axis" 
+			size: {0.4,0.4} position: {0, 0.5}
+			refresh: false{
+					rad_nb<-2;//1: DD, 2: Sec, 3: Att
+					loop i from: 0 to: length(axis) -1 {
+					geometry a <- axis[i];
+					draw a + 0.1 color: #black end_arrow: 2.0;
+					point pt <- first(axis[i].points) + (last(axis[i].points) - first(axis[i].points)) * 1.1;
+					draw axis_labelSec[i]  at: pt anchor: #center font: font("Helvetica", 10, #bold) color: #black;
+					
+				}
+			}
+
+			graphics "radars surface" 
+			size: {0.4,0.4} position: {0, 0.5}
+			transparency: 0.5 {
+				list<int> values <- [Crit_bilan_humain, Crit_bilan_materiel, Crit_reconstruction];
+				list<point> points <- world.define_surface(values);
+				geometry surface <- polygon(points);
+				draw surface color: #yellow border: #orange;
+				loop i from: 0 to: length(axis) -1 {
+					float angle <- (first(axis[i].points) towards last(axis[i].points)) ;
+					if angle > 90 or angle < - 90{
+						angle <- angle - 180;
+					}
+					float dist <- 1.0;
+					point shift_pt <- {cos(angle + 90) * dist, sin(angle + 90) * dist};	
+		
+					point pt <- points[i] + shift_pt;
+					
+					draw string(values[i])  at: pt anchor: #center font: font("Helvetica", 10, #bold) color: #black;
+					
+				}
+			}
+	
+	
+	
+		
+		
+	/*	chart "Développement durable" size: {0.4,0.4} position: {0.4, 0.5} type: radar x_serie_labels: ["Cycle de l'eau", "Satisfaction de la population", "Biodiversité", "max"]  
+			{
+				data "Situation actuelle" value: [Crit_cycle_eau, Crit_satisfaction, Crit_biodiversite] color: #yellow;
+				data "Situation de départ" value: [2, 2, 2] color: #blue;
+			}
+ 
+	chart "Sécurité" size: {0.4,0.4} position: {0, 0.5} type: radar x_serie_labels: ["Bilan humain", "Bilan matériel", "reconstruction"]  
+			{
+				data "Situation actuelle" value: [Crit_bilan_humain, Crit_bilan_materiel, Crit_reconstruction] color: #yellow;
+				data "Situation de départ" value: [2, 2, 2] color: #blue;
+			}
+		
+		chart "Attractivité du territoire"  size: {0.4,0.4} position: {0, 0} type: radar x_serie_labels: ["Environnement", "Logement", "Infrastructure", "Economie"] 
+				y_range:[0,5]
+			 y_tick_unit:1
+			{
+				data "Situation actuelle" value: [Crit_environnement, Crit_logement, Crit_infrastructure, Crit_economie] color: #yellow;
+				data "Situation de départ" value: [2, 2, 2, 2] color: #blue;
+			}
+	*/	
+		
+			
+			chart "global" type:histogram size: {0.4,0.4} position: {0.5, 0}
+			series_label_position: xaxis
+			y_range:[0,5]
+			 y_tick_unit:1
+			{
+				data "Attractivité" value:min([Crit_environnement, Crit_logement, Crit_infrastructure, Crit_economie])
+//				style:stack
+				color:#yellow;
+				data "Sécurité" value:min([Crit_bilan_humain, Crit_bilan_materiel, Crit_reconstruction])
+//				style: stack
+					color:#red;
+				data "Développement durable" value:min([Crit_cycle_eau, Crit_satisfaction, Crit_biodiversite])
+//				style: stack  
+				color:#green;
+				//marker_shape:marker_circle ;
+			}
+		
+		
+		}
+		
+		
 	}
 }
 	
