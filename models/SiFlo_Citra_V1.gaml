@@ -56,7 +56,6 @@ float toto;
 	map<road, float> current_weights;
 	river river_origin;
 	river river_ending;
-	float initial_water_level;
 	int increment;
 	matrix data_flood;
 	matrix data_rain; 
@@ -74,22 +73,22 @@ float toto;
 	float time_step <- 30 #sec; //0.2#mn;  
 	
 		
-	float water_height_perception <- 15 #cm;
+	float water_height_perception <- 1 #cm;
 	float water_height_danger_inside_energy_on <- 20 #cm;
 	float water_height_problem <- 5 #cm;
 	float water_height_danger_inside_energy_off <- 50 #cm;
 
-	float river_broad_maint <- 3 #m;
-	float river_depth_maint<- 3 #m;
-	float river_broad_normal<- 1#m;
-	float river_depth_normal<-1#m;
-	float river_depth_max<-10#m;
+	float river_broad_maint <- 0.01 #m;
+	float river_depth_maint<- 0.01 #m;
+	float river_broad_normal<- 0.01#m;
+	float river_depth_normal<-0.01#m;
+	float river_depth_max<-1#m;
 	float canal_deb_init <- 0.4;
 	float canal_deb_maint <- 0.8;
 	
 	float max_speed <- 5 #m/#s;
 	int repeat_time;
-	float Vmax;
+	float Vmax<-3#m/#s;
 	
 
 	bool end_simul<-false;
@@ -123,8 +122,6 @@ float toto;
 	
 	int max_number_to_inform <- 10;
 	
-	//string scenario <- "S1" among: ["S1","S2","S3","S4"];
-	//string type_explo <- "normal" among: ["normal", "stochasticity"];
 	bool rain<-false;
 	bool water_input<-true;
 	bool water_test<-true;
@@ -137,24 +134,22 @@ float toto;
 	bool only_flood<-false;
 	bool nothing_more<-false;
 	int model_flow<-2; //1: siflo, 2:simplified, 3:other simplified
-	float rain_intensity_test<-2 #cm;
-	float water_input_test<-100*10^8#m3/#h;
+	float rain_intensity_test<-3 #cm;
+	float initial_water_level<-10^6;
+	float water_input_test<-10*10^6#m3/#h;
 	float default_plu_net<-0.1#m3/#s;
 	
 	bool plu_mod<-false;
-	list<rgb> color_category <- [ #darkgrey, #gold, #red];
+	list<rgb> color_category <- [#darkgrey, #gold, #red];
 	
 	map<people,string> injured_how;
 	map<people,string> dead_how;
  
  
  
-	int dead_people_inside <- 0;
-	int dead_people_outside <- 0;
-	int injuried_people_inside;
-	int injuried_people_outside;
 	int flooded_building;
 	float average_building_state;
+
  
 
 //******************indicateurs et critères *******************
@@ -170,8 +165,8 @@ int commerces;
 
 
 //indicateurs Sécurité
-int dead_people<-0;
-int injuried_people<-10;
+int dead_people;
+int injuried_people;
 
 int flooded_building_erp;
 float routes_inondees;
@@ -218,28 +213,28 @@ int W_biodiversite<-2;
 int W_taux_budget_env<-1;
 
 //critere
-int Crit_logement; //0: nul à 5 : top
+int Crit_logement<-2; //0: nul à 5 : top
 int Crit_logement1; //0: nul à 5 : top
 int Crit_logement2; //0: nul à 5 : top
-int Crit_infrastructure; //0: nul à 5 : top
+int Crit_infrastructure<-2; //0: nul à 5 : top
 int Crit_infrastructure1; //0: nul à 5 : top
 int Crit_infrastructure2; //0: nul à 5 : top
-int Crit_economie;
+int Crit_economie<-2;
 
-int Crit_bilan_humain;
+int Crit_bilan_humain<-3;
 int Crit_bilan_humain1;
 int Crit_bilan_humain2;
-int Crit_bilan_materiel_public;
+int Crit_bilan_materiel_public<-3;
 int Crit_bilan_materiel_public1;
 int Crit_bilan_materiel_public2;
-int Crit_bilan_materiel_prive;
+int Crit_bilan_materiel_prive<-3;
 int Crit_bilan_materiel_prive1;
 int Crit_bilan_materiel_prive2;
 int Crit_bilan_materiel_prive3;
 
-int Crit_sols;
-int Crit_satisfaction;
-int Crit_environnement; //0: nul à 5 : top
+int Crit_sols<-2;
+int Crit_satisfaction<-2;
+int Crit_environnement<-2; //0: nul à 5 : top
 int Crit_environnement1;
 int Crit_environnement2;
 int Crit_environnement3;
@@ -427,7 +422,7 @@ int budget_env<-10;
 		current_weights <- road as_map (each::each.shape.perimeter);
 
 		//	create people from: population_shape_file; 
-	//	write length(building where (each.category=0));
+		//	write length(building where (each.category=0));
 		
 		
 		if verbose {write "Road network computed";}	
@@ -631,6 +626,7 @@ int budget_env<-10;
 			ask my_cells {
 				add myself to: my_rivers;
 				add self to:river_cells;
+				if altitude>100#m {altitude<-altitude-20#m;}
 			}
 			
 			altitude <- (my_cells mean_of (each.grid_value));
@@ -647,24 +643,24 @@ int budget_env<-10;
 		
 		
 			float prev_alt<-500#m;
-		loop riv over:river_cells sort_by (each.location.x){
+	 	loop riv over:river_cells sort_by (each.location.x){
 				riv.river_broad<-river_broad_normal;
 				riv.altitude<-min([prev_alt+0.5#m,riv.altitude]);			
 				prev_alt<-riv.altitude;
 				ask riv.neighbors where (!each.is_river and each.altitude>prev_alt) {
-					altitude<-(altitude+2*prev_alt)/3; 
+		//			altitude<-(altitude+2*prev_alt)/3; 
 					already<-true;
 					float alt<-altitude;
-					ask neighbors where (!each.is_river and !each.already and each.altitude>alt) {altitude<-(altitude+2*alt)/3;
+					ask neighbors where (!each.is_river and !each.already and each.altitude>alt) {//altitude<-(altitude+2*alt)/3;
 						float alt2<-altitude;
 						already<-true;
-						ask neighbors where (!each.is_river and !each.already and each.altitude>alt2) {altitude<-(altitude+2*alt2)/3;
+						ask neighbors where (!each.is_river and !each.already and each.altitude>alt2) {//altitude<-(altitude+2*alt2)/3;
 							float alt3<-altitude;
 							already<-true;
-				ask neighbors where (!each.is_river and !each.already and each.altitude>alt3) {altitude<-(altitude+2*alt3)/3;
+				ask neighbors where (!each.is_river and !each.already and each.altitude>alt3) {//altitude<-(altitude+2*alt3)/3;
 							float alt4<-altitude;
 							already<-true;
-				ask neighbors where (!each.is_river and !each.already and each.altitude>alt4) {altitude<-(altitude+2*alt4)/3;
+				ask neighbors where (!each.is_river and !each.already and each.altitude>alt4) {//altitude<-(altitude+2*alt4)/3;
 							already<-true;
 				
 				}
@@ -776,15 +772,79 @@ int budget_env<-10;
 			create people {
 				location<-myself.location;
 				my_building<-myself;
-			}
+				current_stair <- rnd(my_building.nb_stairs);
 			
+				
+				have_car <- false;
+				if flip(0.8) {
+				have_car <- true;
+				create car {
+					my_owner <- myself;
+					myself.my_car <- self;
+					location <- myself.location;
+					float dist <- 100 #m;
+					using topology(world) {
+
+						list<parking> park_close<-parking where !each.is_full at_distance 300#m;
+						loop prk over:park_close {
+							if !is_parked {
+								add self to:prk.my_cars;
+								prk.nb_cars<-prk.nb_cars+1;
+								is_parked<-true;
+							//	location <-any_location_in(prk);
+								if prk.nb_cars=prk.capacity {prk.is_full<-true;}
+							}
+						}
+						if !is_parked {
+						list<road> roads_neigh <- (road where (each.category<2) at_distance dist);
+						loop while: empty(roads_neigh) {
+							dist <- dist + 50;
+							roads_neigh <- (road at_distance dist);
+						}
+						road a_road <- roads_neigh[rnd_choice(roads_neigh collect each.shape.perimeter)];
+						location <- any_location_in(a_road);
+						my_owner.heading <- first(a_road.shape.points) towards last(a_road.shape.points);
+						is_parked<-true;
+						}
+						}	
+				}	
+			
+			
+	
+					
+				}
+			
+			
+			}
 			it<-it+1;	
 			}
 			
 			}
 		
 		
-		ask people parallel: parallel_computation{
+				ask parking {
+			ask my_cars {is_parked<-false;}
+			int cars<-length(my_cars where (!each.is_parked));
+			loop g over: to_squares(shape, 4#m, false) {
+				 if cars>0 {
+					ask one_of(my_cars where (!each.is_parked)) {
+						is_parked<-true;
+						location <- g.location;
+						cars<-cars-1;
+						}
+					}
+				}
+				
+				
+				}	
+		
+		
+		
+		}
+		
+		
+	/* 	ask people parallel: parallel_computation{
+	 
 			know_rules <- flip(one_of(institution).DICRIM_information);
 			do add_desire(life_not_at_stake, 1.0);
 			do add_desire(do_nothing, strength_do_nothing);
@@ -797,7 +857,7 @@ int budget_env<-10;
 			obedience_init <- sqrt((agreeableness + conscientiousness) /2.0);
 			obedience <- obedience_init - 0.1;
 			friends_to_inform_to_select <- round(max_number_to_inform * extroversion);
-			
+		*/	
 			/*list<building> bds <- building overlapping self;
 			if empty(bds) {
 				do die;
@@ -805,12 +865,12 @@ int budget_env<-10;
 				my_building <- first(bds);*/
 				
 				//location <- location + {0, 0, my_building.bd_height};
-				float proba_info<-one_of(institution).flood_informed_people;
+	/* 			float proba_info<-one_of(institution).flood_informed_people;
 				if flip(proba_info) {
 					do add_belief(water_is_coming);
-				}
+				}*/
 			//}
-
+/*
 			current_stair <- rnd(my_building.nb_stairs);
 			have_car <- false;
 			if flip(0.8) {
@@ -846,8 +906,10 @@ int budget_env<-10;
 						}
 				}
 				
+				}
 				
-				if (cell(my_car.location) in active_cells) {
+				
+			/* 	if (cell(my_car.location) in active_cells) {
 					do add_belief(vulnerable_car);
 				}
 
@@ -862,9 +924,9 @@ int budget_env<-10;
 			do add_belief(energy_is_on);
 			do add_belief(evacuation_is_possible);
 		
-		}
+		}*/
 		
-			ask parking {
+		/*	ask parking {
 			ask my_cars {is_parked<-false;}
 			int cars<-length(my_cars where (!each.is_parked));
 			loop g over: to_squares(shape, 4#m, false) {
@@ -878,8 +940,8 @@ int budget_env<-10;
 				}
 				
 					
-				}
-		
+				}*/
+		/* 
 		nb_waiting <- length(people);
  		nb_people_begin<- length(people);
 		if verbose {write "People created: " + nb_people_begin;}	
@@ -902,9 +964,11 @@ int budget_env<-10;
 				to_inform <- to_inform - (friends_to_inform where (each.friends_to_inform_to_select = 0));
 			}
 		} 
-		if verbose {write "People network generated";}	
+		if verbose {write "People network generated";}	*/
 		
-	}
+	
+	
+/*	}*/
 	
 	action manage_scenario {
 		if scen {
@@ -916,8 +980,8 @@ int budget_env<-10;
 		 	 water_input<-true;
 			 water_test<-true;
 	
-			if alea="petit" {water_input_test<-1*10^2#m3/#h;	}
-			if alea="moyen" {water_input_test<-5*10^5#m3/#h;	}
+			if alea="petit" {water_input_test<-1*10^2#m3/#h;}
+			if alea="moyen" {water_input_test<-5*10^5#m3/#h;}
 			if alea="fort" {water_input_test<-1*10^6#m3/#h;	}
 			
 			
@@ -942,28 +1006,44 @@ int budget_env<-10;
 		ask natura {do die;}
 	}
 		
+		
+		
 	}
 	
 //***************************  END of INIT     **********************************************************************
 
 
 	//***************************  REFLEX GLOBAL **********************************************************************
-	
+	float time_start;
 	reflex mode {
-	
 	if mode_flood {
-		
+		ask people {do acting;}
 		if (time mod 30#mn) = 0 {do garbage_collector;}   //every(30 #mn)
 		if (time mod 60#mn) = 0 {do update_flood;} //every(#hour) 
 		do flower;
 		do update_road;
-		if (time mod display_every) = 0 {if benchmark{do write_benchmark;} //when:  every(display_every)
+		if (time mod display_every) = 0 {if benchmark{do write_benchmark;}}
+		if (time=time_start+3600*3) {
+			mode_flood<-false;
+			do update_indicators; 
+			ask cell {
+				water_volume<-0.0;
+				do compute_water_altitude;	
+				do verify_river_full;
+			}
+			write "Morts : "+dead_people;
+			write "Blessés : "+injuried_people;
+			write ("number of flooded car : " +flooded_car);
+			write ("number of flooded building: " +flooded_building);
 		}
+		
 	}	
 	
 	if !mode_flood {
 		write ("Mode Gestion");
-		do update_indicators; 
+		do pause;
+		mode_flood<-true;
+		time_start<-time;
 	}
 	
 	}
@@ -985,8 +1065,8 @@ int budget_env<-10;
 	/* 	string 	results <- ""+ 
 		int(self)+"," + seed+","+scenario+","+ proba_know_rules + ","+river_broad+","+
 		river_depth+","+","+ cycle + ","+
-		leaving_people+"," +injuried_people_inside+","+injuried_people_outside+","+dead_people_inside+","+
-		dead_people_outside+"," +flooded_car+"," +flooded_building+","+average_building_state +"," +injured_how.values+ ","+ dead_how.values ;
+		leaving_people+"," +injuried_people+","+injuried_people+","+dead_people+","+
+		dead_people+"," +flooded_car+"," +flooded_building+","+average_building_state +"," +injured_how.values+ ","+ dead_how.values ;
 		
 		save results to: "results_" + type_explo+ "_" + scenario+".csv" type:text rewrite: false;
 */		
@@ -996,10 +1076,10 @@ int budget_env<-10;
 			write ("*************************");
 			write ("number of people : ") +nb_people_begin;
 			write ("number of evacuated people : " +leaving_people);
-			write ("number of injuried people inside : " +injuried_people_inside);
-			write ("number of injuried people outside : " +injuried_people_outside);
-			write ("number of dead people in building: " +dead_people_inside);
-			write ("number of dead people outside: " +dead_people_outside);
+			write ("number of injuried people inside : " +injuried_people);
+			write ("number of injuried people outside : " +injuried_people);
+			write ("number of dead people in building: " +dead_people);
+			write ("number of dead people outside: " +dead_people);
 			write ("number of flooded car : " +flooded_car);
 			write ("number of flooded building: " +flooded_building);
 			write ("average building state: " +average_building_state);
@@ -1053,15 +1133,16 @@ ask cell where (each.is_dyke and each.water_height>1#m) {do breaking_dyke;}
 		
 		if benchmark {do add_data_benchmark_sub("World - flowing - step 1", machine_time - tt);tt <- machine_time;}
 		if water_input {
-			float debit_water <- float(data_flood[0, increment]) #m3/#h;
-			initial_water_level <- debit_water *step;
-			if water_test and time<=time_flood_test{	
-				initial_water_level <- water_input_test*step/cell_area;
-			}
+		//	float debit_water <- float(data_flood[0, increment]) #m3/#h;
+		//	initial_water_level <- debit_water *step;
+		//	if water_test and time<=time_flood_test{	
+		//		initial_water_level <- water_input_test*step/cell_area;
+		//	}
 			
 			
 			ask cell where (each.location.x=1 and each.location.x=1) {
-						cumul_water_enter<-cumul_water_enter+initial_water_level;	
+						cumul_water_enter<-cumul_water_enter+initial_water_level;
+						write "cumul wat : "+	cumul_water_enter;
 					water_volume<-water_volume+initial_water_level;
 					do compute_water_altitude;
 			} 
@@ -1130,6 +1211,9 @@ ask cell where (each.is_dyke and each.water_height>1#m) {do breaking_dyke;}
 
 
 	action flowing2 {
+		float volume_wat_tot<-cell sum_of(each.water_volume);
+		write volume_wat_tot;
+		
 		float t; if benchmark {t <- machine_time;}
 		float tt; if benchmark {tt <- machine_time;}
 		
@@ -1156,20 +1240,29 @@ ask cell where (each.is_dyke and each.water_height>1#m) {do breaking_dyke;}
 			}
 			
 			
-			ask cell where (each.grid_x=0 and each.grid_y=0) {
+	/* 		ask cell where (each.grid_x=0 and each.grid_y=0) {
 						cumul_water_enter<-cumul_water_enter+initial_water_level;	
 					water_volume<-water_volume+initial_water_level;
 					do compute_water_altitude;
-			} 
-		/* 	ask river_origin {
+			} */
+		 	ask river_origin {
 				ask cell_origin  parallel: parallel_computation{
 					cumul_water_enter<-cumul_water_enter+initial_water_level;	
 					water_volume<-water_volume+initial_water_level;
+					write "vvvvvvvv";
+				//	write "init : "+initial_water_level;
+				//	write " wat vol : "+water_volume;
+					write "tot vol : "+ cell sum_of(each.water_volume);
+					write "tot vol : "+ cell min_of(each.water_volume);
+				//
+					write " cumul_water_enter : "+cumul_water_enter;
+					write "vvvvvvvv";
+					
 					do compute_water_altitude;
 								
 				}
 				
-			}*/
+			}
 		}
 		if benchmark {do add_data_benchmark_sub("World - flowing - step 2", machine_time - tt);tt <- machine_time;}
 		
@@ -1198,7 +1291,7 @@ ask cell where (each.is_dyke and each.water_height>1#m) {do breaking_dyke;}
 			
 			if benchmark {do add_data_benchmark_sub("World - flowing - step 4 sub_step 1", machine_time - ttt);ttt <- machine_time;}
 		
-			list<cell> flowing_cell <- cell where (each.water_volume>0);
+			list<cell> flowing_cell <- cell where (each.water_volume>1 #m3);
 			list<cell> cells_ordered <- flowing_cell sort_by (each.water_altitude);
 			if benchmark {do add_data_benchmark_sub("World - flowing - step 4 sub_step 2", machine_time - ttt);ttt <- machine_time;}
 		
@@ -1262,13 +1355,12 @@ services<-length(building where (each.category=2));
 entretien_reseau_plu<-0.10; //Linéaire de réseau entretenu divisé par le linéaire total, multiplié par 100 (par action à chaque tour)
 commerces<-length(building where (each.category=1));
 
-dead_people<-dead_people_inside+dead_people_outside;
-injuried_people<-injuried_people_inside+injuried_people_outside;
 flooded_building_erp<-length(building where (each.serious_flood and each.category=2));
 routes_inondees<-road where (each.is_flooded) sum_of(each.shape.perimeter)/road sum_of(each.shape.perimeter);
 flooded_building_prive<-length(building where (each.serious_flood and each.category<2));
 bien_endommage<-0.5; //à calculer
 flooded_car<-length(car where (each.domaged));
+
 
 taux_artificilisation<-(building sum_of (each.shape.area)+parking sum_of (each.shape.area)+road sum_of (each.shape.perimeter*4#m))/world.shape.area;
 satisfaction<-people mean_of(each.satisfaction);
@@ -1379,7 +1471,7 @@ else {if flooded_building_erp=1 {Crit_bilan_materiel_public1<-4;}
 }
 if routes_inondees=0 {Crit_bilan_materiel_public2<-5;}
 else {if routes_inondees<0.01 {Crit_bilan_materiel_public2<-4;}
-	else {if routes_inondees<0.5 {Crit_bilan_materiel_public2<-3;}
+	else {if routes_inondees<0.05 {Crit_bilan_materiel_public2<-3;}
 		else {if routes_inondees<0.1 {Crit_bilan_materiel_public2<-2;}
 			else {if routes_inondees<0.2 {Crit_bilan_materiel_public2<-1;}
 				else {Crit_bilan_materiel_public1<-0;}
@@ -1490,7 +1582,12 @@ Crit_environnement<-round((Crit_environnement4*W_taux_budget_env+Crit_environnem
 
 
 
-
+ask road where (each.is_flooded) {is_flooded<-false;}
+ask building where (each.serious_flood) {serious_flood<-false;}
+ask car where each.domaged {domaged<-false;}
+ask people where each.injuried {injuried<-false;}
+injuried_people<-0;
+dead_people<-0;
 
 
 //;
@@ -1508,10 +1605,10 @@ Economie; //0: nul à 5 : top
 /*float entreprise;
 float budget_env;
 
-int dead_people_inside <- 0;
+int dead_people <- 0;
 int  <- 0;
-int injuried_people_inside;
-int injuried_people_outside;
+int injuried_people;
+int injuried_people;
 int 
 float average_building_state;
 int flooded_car;
@@ -1542,7 +1639,7 @@ float biodiversite;*/
 	]; 
 	
 	action activate_act {
-		button selected_but <- first(button overlapping (circle(1) at_location #user_location));
+	/*	button selected_but <- first(button overlapping (circle(1) at_location #user_location));
 		if(selected_but != nil) {
 			ask selected_but {
 				ask button {bord_col<-#black;}
@@ -1558,7 +1655,7 @@ float biodiversite;*/
 				write "waaaaaoooooooouhhhhhh waaaaouhhhhhhh";
 				ask people {do add_belief(water_is_coming);	}
 			}
-		}
+		}*/
 	}
 
 	action cell_management {
@@ -1970,7 +2067,464 @@ species PLU {
 //***********************************************************************************************************
 //***************************  PEOPLE   **********************************************************************
 //***********************************************************************************************************
-species people skills: [moving] control:  simple_bdi {
+species people skills: [moving]  {
+	building my_building;
+	car my_car;
+	bool have_car;
+	int Age;
+	string Sexe;
+	string iris;
+	string Couple;
+	string CSP;
+	
+	int current_stair;
+	bool know_rules;
+	point my_location;
+	bool in_car <- false;
+	bool inside<-true;
+	bool injuried<-false;
+
+	int friends_to_inform_to_select;
+	list<people> friends_to_inform;
+	
+	float satisfaction<-0.5; //0: not satisfy at all, 1: very satisfied
+	
+	
+	float water_height_danger_car <- (10 + rnd(30)) #cm;
+	float water_height_danger_pied <- (10 + rnd(90)) #cm;
+	
+	float my_speed {
+		if in_car {
+			if my_car.usable {return 30 #km / #h;}
+			if !my_car.usable {return 2 #km / #h;}
+		} else {
+			return 2 #km / #h;
+		}
+
+	}
+
+	float fear_level <- 0.0 ;
+	float danger_inside <- 0.0; //between 0 and 1 (1 danger of imeediate death)
+	float danger_outside <- 0.0; //between 0 and 1 (1 danger of imeediate death)
+	float proba_evacuation<-0.0;
+	point current_target;
+	point final_target;
+	point random_target;
+	building random_building;
+	rgb my_color <- #mediumvioletred;
+	bool return_home <- false;
+	
+	list<int> known_blocked_roads;
+	
+	graph current_graph;
+	
+	float outside_test_period <- rnd(15,30) #mn;
+	cell my_current_cell;
+	
+	float water_level <- 0.0;
+	
+	float prev_water_inside <- 0.0;
+	float prev_water_outside <- 0.0;
+	
+	
+	float max_danger_inside<-0.0;
+	float max_danger_outside<-0.0;
+	
+	bool doing_agenda<-false;
+	
+	init {
+		if flip(0.2) {
+			doing_agenda<-true;
+			final_target <- (one_of(building where (each.category>0))).location;
+		}
+		
+		
+		
+	}
+
+	action acting {
+		if (time mod 10#mn) = 0 {do test_proba;} //when: (time mod 10#mn) = 0
+		do my_perception;
+		if (doing_agenda) {do agenda;}
+	}
+	
+	
+	
+	//***************************  perception ********************************
+	action my_perception {
+		if mode_flood {
+		bool water_cell_neighbour <- false;
+		bool water_cell <- false;
+		bool water_building <- false;
+		danger_inside<-0.0;
+		danger_outside<-0.0;
+		if inside {
+			float whp <- water_height_perception;
+			water_cell <- my_building.water_cell;
+			water_cell_neighbour <- my_building.neighbour_water;
+			water_level <- my_building.water_height;
+			prev_water_inside <- my_building.water_height ;
+		
+			if my_building.water_height >= water_height_problem {
+				water_building <- true;
+				if current_stair<my_building.nb_stairs {current_stair<-my_building.nb_stairs;}
+			}
+		} else if (my_current_cell != nil) {
+			water_level <- my_current_cell.water_height;
+			prev_water_outside <- my_current_cell.water_height;
+			} 
+		}
+	}
+	
+	
+	action update_danger {
+		if inside {
+			if (my_building.water_height >(3*(current_stair+1))) {
+					if (my_building.nrj_on) {
+						danger_inside <- min([danger_inside,min([1.0, (my_building.water_height - water_height_danger_inside_energy_on)])]); //entre 0 et 1 (1 danger de mort imminente) 
+					}else {
+						danger_inside <- min([danger_inside,min([1.0, (my_building.water_height - water_height_danger_inside_energy_off)])]); //entre 0 et 1 (1 danger de mort imminente) 
+					}
+					if danger_inside >0 {
+						max_danger_inside <- max(max_danger_inside, danger_inside);
+						if not (self in injured_how.keys) {
+							injuried<-true;
+							injuried_people <- injuried_people+1;
+						}
+					}
+				}		
+		}
+		else if my_current_cell != nil{
+			float wh<-my_current_cell.water_height; 
+			if in_car {danger_outside<-max([danger_outside,max([0,min([1.0, (wh-water_height_danger_car)/water_height_danger_car])])]);	}
+			else {danger_outside<-max([danger_outside,max([0,min([1.0, (wh-water_height_danger_pied)/water_height_danger_pied])])]);}
+			if danger_outside >0 {
+				max_danger_outside <- max(max_danger_outside, danger_outside);		
+				if not (self in injured_how.keys) {
+					injuried<-true;
+					injuried_people <- injuried_people+1;
+				}			
+			}
+		}
+	}
+	
+	action test_proba  {
+		if flip(max_danger_outside) or flip(max_danger_inside) {
+			do to_die;
+		}
+		max_danger_inside <- 0.0;
+		max_danger_outside <- 0.0;
+	}
+	
+		
+	action agenda{
+			if (final_target = nil) {
+				final_target <- (one_of(building where (each.category>0))).location;
+			if (have_car) {
+				current_target <- my_car.location;
+			} else {
+				current_target <- final_target;
+			}
+
+		} else {
+			do moving;
+			if( in_car) {
+				my_car.location <- location;
+			}
+			if (current_target = location) {
+				if (current_target = final_target) {
+					leaving_people <- leaving_people + 1;
+					if (in_car) {ask my_car {do die;}}
+					do die;
+				} else {
+					in_car <- true;
+					current_target <- final_target;
+				}
+			}
+		}
+		
+		if flip(0.3) {do moving;}
+	}
+	
+	
+	
+	action to_die {
+		if (inside) {
+			dead_people <- dead_people + 1;
+		} else {
+			dead_people <- dead_people + 1;
+		}
+
+			if (injuried) {
+				injuried_people <- injuried_people - 1;
+			}
+	
+	
+		do die;
+	}
+	
+
+
+	
+
+
+	action moving {
+		inside<-false;
+		list<road> rd <- not_usable_roads where ((each distance_to self) < flooded_road_percep_distance) ;
+		if not empty(rd) {
+			loop r over: rd {
+				int id <- int(r);
+				if not(id in known_blocked_roads) {
+					known_blocked_roads << id;
+					known_blocked_roads <- known_blocked_roads sort_by each ;
+					current_path <- nil;
+					current_edge <- nil;
+					if not (known_blocked_roads in road_network_custom.keys) {
+						graph a_graph <- (as_edge_graph(road - known_blocked_roads) use_cache false) with_shortest_path_algorithm #NBAStar;
+						road_network_custom[known_blocked_roads] <- a_graph;
+						current_graph <- a_graph;
+					} 
+				}
+			}	
+		
+		}
+		if (current_graph = nil) {current_graph <- road_network_custom[known_blocked_roads];}
+		do goto target: current_target on: current_graph = nil ? first(road_network_custom.values) :  current_graph move_weights: current_weights ;
+		if (location = current_target) {
+			current_graph <- nil;
+		}
+			
+	}
+
+	action protect_properties {
+		current_stair<-0;
+		my_building.vulnerability <- my_building.vulnerability - (0.2 * step / 1 #h);
+	}
+
+
+	action turn_off_nrj  {
+		current_stair<-0;
+		my_building.nrj_on <- false;
+	}
+
+
+	action weather_strip_house {
+		current_stair<-0;
+		my_building.impermeability <- my_building.impermeability + (0.05*step / 1 #h);
+	}
+	
+
+	action do_nothing  {
+			
+	}
+
+	action drain_off_water  {
+		my_building.water_height <- max([0, my_building.water_height - 0.01 #m3 / #mn / my_building.shape.area * step]);
+		current_stair <- 0;
+	}
+
+
+	action evacuate  {
+		current_stair<-0;
+		inside<-false;
+		my_color <- #gold;
+		speed <- my_speed();
+		if (final_target = nil) {
+			final_target <- (escape_cells with_min_of (each.location distance_to location)).location;
+			if (have_car) {
+				current_target <- my_car.location;
+			} else {
+				current_target <- final_target;
+			}
+
+		} else {
+			do moving;
+			if( in_car) {
+				my_car.location <- location;
+			}
+			if (current_target = location) {
+				if (current_target = final_target) {
+					leaving_people <- leaving_people + 1;
+					if (in_car) {ask my_car {do die;}}
+					do die;
+				} else {
+					in_car <- true;
+					current_target <- final_target;
+				}
+			}
+		}
+	}
+
+
+	action give_information {
+	}
+
+
+	action go_outside  {
+		current_stair<-0;		
+		inside<-false;
+		my_color <- #pink;
+		speed <- my_speed();
+		if (random_target = nil) {
+			random_building<-one_of (building);
+			random_target <- (random_building.location);
+			if (have_car) {
+				current_target <- my_car.location;
+			} else {
+				current_target <- random_target;
+			}
+
+		} else {
+			do moving;
+			if( in_car) {
+				my_car.location <- location;
+			}
+			if (current_target = location) {
+				if (current_target = random_target) {
+				my_building<-random_building;
+				inside<-true;
+				float dist<-50#m;
+				list<road> roads_neigh <- (road at_distance dist);
+					loop while: empty(roads_neigh) {
+						dist <- dist + 20;
+						roads_neigh <- (road at_distance dist);
+					}
+					road a_road <- roads_neigh[rnd_choice(roads_neigh collect each.shape.perimeter)];
+					my_car.location <- any_location_in(a_road);
+				
+				} else {
+					in_car <- true;
+					current_target <- random_target;
+				}
+			}
+		}
+	}
+
+
+	action going_upstairs {
+
+		current_stair <- my_building.nb_stairs;
+	}
+	
+	
+
+	action inquiring_information {
+	
+	}
+	
+
+
+
+	action protect_my_car {
+		inside<-false;
+		current_stair <- 0;	
+		speed <- my_speed();
+		if (final_target = nil) {
+			road a_road <- safe_roads[rnd_choice(safe_roads collect (1.0/(1 + each.location distance_to my_car.location)))];
+			final_target <- any_location_in(a_road);
+			current_target <- my_car.location;
+		} else {
+			do moving;
+			if( in_car) {
+				my_car.location <- location;
+			}
+			if (current_target = location) {
+				if (current_target = final_target) {
+					in_car <- false;
+					current_target <- any_location_in(my_building);
+					return_home <- true;
+				} else {
+					if (return_home) {
+						return_home <- false;
+					} else {
+						in_car <- true;
+						current_target <- final_target;
+					}
+					
+				}
+				
+
+			}
+
+		}
+	}
+
+
+	action protect_my_properties {
+		float t; if benchmark {t <- machine_time;}
+		do protect_properties;
+		if benchmark {ask world {do add_data_benchmark("people - protect_my_properties", machine_time - t);}}
+	}
+
+
+	action moving {
+		inside<-false;
+		list<road> rd <- not_usable_roads where ((each distance_to self) < flooded_road_percep_distance) ;
+		if not empty(rd) {
+			loop r over: rd {
+				int id <- int(r);
+				if not(id in known_blocked_roads) {
+					known_blocked_roads << id;
+					known_blocked_roads <- known_blocked_roads sort_by each ;
+					current_path <- nil;
+					current_edge <- nil;
+					if not (known_blocked_roads in road_network_custom.keys) {
+						graph a_graph <- (as_edge_graph(road - known_blocked_roads) use_cache false) with_shortest_path_algorithm #NBAStar;
+						road_network_custom[known_blocked_roads] <- a_graph;
+						current_graph <- a_graph;
+					} 
+				}
+			}	
+		
+		}
+		if (current_graph = nil) {
+			
+			current_graph <- road_network_custom[known_blocked_roads];
+		}
+		do goto target: current_target on: current_graph = nil ? first(road_network_custom.values) :  current_graph move_weights: current_weights ;
+		if (location = current_target) {
+			current_graph <- nil;
+		}
+			
+	}
+
+
+
+
+	action turn_off_nrj {
+		current_stair<-0;
+		my_building.nrj_on <- false;
+	}
+
+	action weather_strip_house  {
+		do weather_strip_house;
+	}
+	
+	
+	action weather_strip_house {
+		current_stair<-0;
+		my_building.impermeability <- my_building.impermeability + (0.05*step / 1 #h);
+		if (my_building.impermeability >= my_building.max_impermeability) {
+		}
+}
+
+
+
+
+	//***************************  APPARENCE  ********************************************************
+	aspect default {
+		float haut;
+		if inside{haut<-10#m;} 
+		else {haut<-3#m;}
+		draw cylinder(1 #m, haut) color: my_color;
+	}
+
+}
+
+//***********************************************************************************************************
+//***************************  PEOPLE BDI   **********************************************************************
+//***********************************************************************************************************
+species peoplebdi skills: [moving] control:  simple_bdi {
 	building my_building;
 	car my_car;
 	bool have_car;
@@ -1988,16 +2542,9 @@ species people skills: [moving] control:  simple_bdi {
 	bool injuried_inside<-false;
 	bool injuried_outside<-false;
 	int friends_to_inform_to_select;
-	list<people> friends_to_inform;
-	
-	
+	list<peoplebdi> friends_to_inform;
 	
 	float satisfaction<-0.5; //0: not satisfy at all, 1: very satisfied
-	
-	
-	
-	
-	
 	
 	
 	float water_height_danger_car <- (10 + rnd(30)) #cm;
@@ -2140,7 +2687,7 @@ species people skills: [moving] control:  simple_bdi {
 						max_danger_inside <- max(max_danger_inside, danger_inside);
 						if not (self in injured_how.keys) {
 							injuried_inside<-true;
-							injuried_people_inside <- injuried_people_inside+1;
+							injuried_people <- injuried_people+1;
 							injured_how[self] <- current_plan;
 						}
 					}
@@ -2155,7 +2702,7 @@ species people skills: [moving] control:  simple_bdi {
 						
 				if not (self in injured_how.keys) {
 					injuried_outside<-true;
-					injuried_people_outside <- injuried_people_outside+1;
+					injuried_people <- injuried_people+1;
 					injured_how[self] <- current_plan;
 					//write name + " " + current_plan;
 				}
@@ -2187,17 +2734,17 @@ species people skills: [moving] control:  simple_bdi {
 	
 	action to_die {
 		if (inside) {
-			dead_people_inside <- dead_people_inside + 1;
+			dead_people <- dead_people + 1;
 		} else {
-			dead_people_outside <- dead_people_outside + 1;
+			dead_people <- dead_people + 1;
 		
 		}
 			if not (self in injured_how.keys) {
 			if (injuried_outside) {
-				injuried_people_outside <- injuried_people_outside - 1;
+				injuried_people <- injuried_people - 1;
 			}
 			if (injuried_inside) {
-				injuried_people_inside <- injuried_people_inside - 1;
+				injuried_people <- injuried_people - 1;
 			}	
 			remove key: self from:injured_how; 
 		}
@@ -2368,7 +2915,7 @@ species people skills: [moving] control:  simple_bdi {
 		
 		nb_inform <- nb_inform+ 1;
 		nb_waiting <- nb_waiting - 1;
-		people people_to_inform <- friends_to_inform with_max_of (get_social_link(new_social_link(each)).liking + get_social_link(new_social_link(each)).solidarity);
+		peoplebdi people_to_inform <- friends_to_inform with_max_of (get_social_link(new_social_link(each)).liking + get_social_link(new_social_link(each)).solidarity);
 		ask one_of(friends_to_inform) {
 			do add_belief(water_is_coming);
 			emotional_contagion emotion_detected:fear ;
@@ -2597,7 +3144,6 @@ species people skills: [moving] control:  simple_bdi {
 
 }
 
-
 //***********************************************************************************************************
 //*************************** OBSTACLE **********************************************************************
 //***********************************************************************************************************
@@ -2673,7 +3219,7 @@ grid cell neighbors: 8 file: mnt_file {
 	float volume_distrib_cell;
 	bool is_flowed<-false;
 	bool may_flow_cell;
-
+	float prop_flow;
 
 
 
@@ -2723,7 +3269,7 @@ grid cell neighbors: 8 file: mnt_file {
 	}
 	
 	action absorb_water {
-	water_volume<-water_volume*(1-permeability);
+	//water_volume<-water_volume*(1-permeability);
 	water_abs<-water_abs+water_volume;
 	if water_abs>water_abs_max {permeability<-0.0;}
 	//permeability<-max([0,permeability-(water_abs_max-water_volume)/water_abs_max]);
@@ -2846,7 +3392,7 @@ grid cell neighbors: 8 file: mnt_file {
 						//float slopetot<-0.0;
 						//ask flow_cells {slopetot<-slopetot+max([0.05,myself.altitude-self.altitude]);}
 						is_flowed<-true;
-					float prop_flow;
+				//	float prop_flow;
 					//prop_flow<-1/length(flow_cells);
 					
 					float slope_sum<-flow_cells sum_of(slope_neigh[each]);
@@ -2899,10 +3445,12 @@ grid cell neighbors: 8 file: mnt_file {
 			list<cell> cell_to_flow;		
 			V<-3#m/#s;
 			dp<-V*step; //distance parcourue en 1 step
-			prop<-min([1,max([0.1,(dp-sqrt(cell_area))/sqrt(cell_area)])]); //proportion eau transmise
+			//prop<-min([1,max([0.1,(dp-sqrt(cell_area))/sqrt(cell_area)])]); //proportion eau transmise
+			prop<-1.0;
 			volume_distrib<-max([0,water_volume*prop]);
+			
 			float w_a<-water_altitude;
-			add self to:cell_to_flow;
+			//add self to:cell_to_flow;
 			ask neighbour_cells_al {
 				do absorb_water;	
 				do compute_water_altitude;
@@ -2910,10 +3458,10 @@ grid cell neighbors: 8 file: mnt_file {
 					add self to:cell_to_flow;
 					ask neighbors where (each.already) {
 						if (is_river_full and w_a > water_altitude and (w_a > (altitude+obstacle_height-river_depth))) or (!is_river_full and w_a > water_altitude and (w_a > (altitude-river_depth))) {
-							add myself to:cell_to_flow;
+						//	add myself to:cell_to_flow;
 							ask neighbors where (each.already) {
 								if (is_river_full and w_a > water_altitude and (w_a > (altitude+obstacle_height-river_depth))) or (!is_river_full and w_a > water_altitude and (w_a > (altitude-river_depth))) {
-									add myself to:cell_to_flow;					
+								//	add myself to:cell_to_flow;					
 								}
 								}
 							}
@@ -2922,18 +3470,31 @@ grid cell neighbors: 8 file: mnt_file {
 			}
 
 					flow_cells <- remove_duplicates(cell_to_flow);	
+					float tot_den<-flow_cells sum_of (max([0,w_a-(each.altitude)]));
+		//			write name;
+		//			write tot_den;
+		//			write flow_cells;
+		//			write "************************";
+					
 				//	remove self from:(cell_to_flow);					
-					if (!empty(flow_cells)) {			
+					if (!empty(flow_cells) and tot_den>0) {			
 						is_flowed<-true;
-						float prop_flow;
-						prop_flow<-1/length(flow_cells);						
-						float slope_sum<-flow_cells sum_of(slope_neigh[each]);
+						
+												
+						//prop_flow<-1/length(flow_cells);
+						//float slope_sum<-flow_cells sum_of(slope_neigh[each]);
 						ask flow_cells {
+							prop_flow<-(w_a-altitude)/tot_den;
 							volume_distrib_cell<-with_precision(myself.volume_distrib*prop_flow,4);
 							water_volume <- water_volume + volume_distrib_cell;	
 							do compute_water_altitude;
+							
 						} 
 				 		water_volume <- water_volume - volume_distrib;
+				 //		write "vol distrib cell : "+flow_cells sum_of(each.volume_distrib_cell);
+				 //		write "volume_distrib : "+volume_distrib;
+				 //		write "vol distrib cell : "+flow_cells sum_of(each.prop_flow);
+				 //		write "tot_den : "+tot_den;
 						do compute_water_altitude;
 					
 			} 
@@ -3010,7 +3571,7 @@ grid cell neighbors: 8 file: mnt_file {
 			color <- #mediumseagreen;
 		}*/
 			
-		if water_height>1#cm or water_river_height>1#cm {
+		if water_height>0#cm or water_river_height>0#cm {
 		val_water <- max([0, min([200, int(200 * (1 - (water_height / 100#cm)))])]);
 		color <- rgb([val_water, val_water, 255]);
 		}
@@ -3072,15 +3633,140 @@ experiment "Simulation" type: gui {
 			species river;
 			species people;
 			species car;
-			species project;	
+			//species project;	
 			}
 			
 				display map3D type: opengl background: #black draw_env: false {
 			grid cell  triangulation:false refresh: true ;
 			species cell  refresh: true aspect:map3D;				
+		}
+		
+		
+		display "Indicateurs"
+		{
+			//Attractivité
+			graphics "radars axis" 
+			size: {0.4,0.4}  position: {0, 0}
+			refresh: false{
+					loop i from: 0 to:2 {
+					geometry a <- axis3[i];
+					draw a + 0.1 color: #black end_arrow: 2.0;
+					point pt <- first(axis3[i].points) + (last(axis3[i].points) - first(axis3[i].points)) * 1.1;
+					draw axis_labelAtt[i]  at: pt anchor: #center font: font("Helvetica", 10, #bold) color: #black;
+					
+				}
+			}
+			graphics "radars surface" 
+			size: {0.4,0.4} position: {0, 0}
+			transparency: 0.5 {
+				list<int> values <- [Crit_logement, Crit_infrastructure, Crit_economie];
+				list<point> points <- world.define_surface3(values);
+				geometry surface <- polygon(points);
+				draw surface color: #yellow border: #orange;
+				loop i from: 0 to: 2 {
+					float angle <- (first(axis3[i].points) towards last(axis3[i].points)) ;
+					if angle > 90 or angle < - 90{
+						angle <- angle - 180;
+					}
+					float dist <- 1.0;
+					point shift_pt <- {cos(angle + 90) * dist, sin(angle + 90) * dist};	
+		
+					point pt <- points[i] + shift_pt;
+					
+					draw string(values[i])  at: pt anchor: #center font: font("Helvetica", 10, #bold) color: #black;
+					
+				}
+			}
+		
+			//Développement durable
+			graphics "radars axis" 
+			size: {0.4,0.4} position: {0.4, 0.5}
+			refresh: false{
+					loop i from: 0 to: 2 {
+					geometry a <- axis3[i];
+					draw a + 0.1 color: #black end_arrow: 2.0;
+					point pt <- first(axis3[i].points) + (last(axis3[i].points) - first(axis3[i].points)) * 1.1;
+					draw axis_labelDD[i]  at: pt anchor: #center font: font("Helvetica", 10, #bold) color: #black;
+					
+				}
+			}
+			graphics "radars surface" 
+			size: {0.4,0.4} position: {0.4, 0.5}
+			transparency: 0.5 {
+				list<int> values <- [Crit_sols, Crit_satisfaction, Crit_environnement];
+				list<point> points <- world.define_surface3(values);
+				geometry surface <- polygon(points);
+				draw surface color: #yellow border: #orange;
+				loop i from: 0 to: 2 {
+					float angle <- (first(axis3[i].points) towards last(axis3[i].points)) ;
+					if angle > 90 or angle < - 90{
+						angle <- angle - 180;
+					}
+					float dist <- 1.0;
+					point shift_pt <- {cos(angle + 90) * dist, sin(angle + 90) * dist};	
+		
+					point pt <- points[i] + shift_pt;
+					
+					draw string(values[i])  at: pt anchor: #center font: font("Helvetica", 10, #bold) color: #black;
+					
+				}
+			}
+		
+			//Sécurité
+			graphics "radars axis" 
+			size: {0.4,0.4} position: {0, 0.5}
+			refresh: false{
+					loop i from: 0 to: 2 {
+					geometry a <- axis3[i];
+					draw a + 0.1 color: #black end_arrow: 2.0;
+					point pt <- first(axis3[i].points) + (last(axis3[i].points) - first(axis3[i].points)) * 1.1;
+					draw axis_labelSec[i]  at: pt anchor: #center font: font("Helvetica", 10, #bold) color: #black;
+					
+				}
+			}
+			graphics "radars surface" 
+			size: {0.4,0.4} position: {0, 0.5}
+			transparency: 0.5 {
+				list<int> values <- [Crit_bilan_humain, Crit_bilan_materiel_public, Crit_bilan_materiel_prive];
+				list<point> points <- world.define_surface3(values);
+				geometry surface <- polygon(points);
+				draw surface color: #yellow border: #orange;
+				loop i from: 0 to: 2 {
+					float angle <- (first(axis3[i].points) towards last(axis3[i].points)) ;
+					if angle > 90 or angle < - 90{
+						angle <- angle - 180;
+					}
+					float dist <- 1.0;
+					point shift_pt <- {cos(angle + 90) * dist, sin(angle + 90) * dist};	
+		
+					point pt <- points[i] + shift_pt;
+					
+					draw string(values[i])  at: pt anchor: #center font: font("Helvetica", 10, #bold) color: #black;
+					
+				}
+			}
+
+			
+			chart "global" type:histogram size: {0.4,0.4} position: {0.5, 0}
+			series_label_position: xaxis
+			y_range:[0,5]
+			 y_tick_unit:1
+			{
+				data "Attractivité" value:min([Crit_logement, Crit_infrastructure, Crit_economie])
+				color:#yellow;
+				data "Sécurité" value:min([Crit_bilan_humain, Crit_bilan_materiel_prive, Crit_bilan_materiel_public])
+					color:#red;
+				data "Développement durable" value:min([Crit_sols, Crit_satisfaction, Crit_environnement])
+				color:#green;
+			}
 		
 		
 		}
+		
+		}
+		
+}
+		
 		/* 
 		display charts refresh: every(10 #mn) {
 			chart "Water level " size:{1.0, 1/4} {
@@ -3101,11 +3787,11 @@ experiment "Simulation" type: gui {
 			
 			chart "number of injured and death" size:{1.0, 1/4} position: {0.0, 2/4} {
 				data "number of evacuated people" value: leaving_people color: #green;
-				data "number of deads inside" value: dead_people_inside color: #brown;
-				data "number of deads outside" value: dead_people_outside color: #red;
+				data "number of deads inside" value: dead_people color: #brown;
+				data "number of deads outside" value: dead_people color: #red;
 				
-				data "number of injured people inside" value: injuried_people_inside color: #yellow;
-				data "number of injured people outside" value: injuried_people_outside color: #orange;
+				data "number of injured people inside" value: injuried_people color: #yellow;
+				data "number of injured people outside" value: injuried_people color: #orange;
 				
 			}
 			
@@ -3128,9 +3814,9 @@ experiment "Simulation" type: gui {
 			
 		}*/
 
-	}
 	
-	}
+	
+	
 	
 	
 	experiment Interation type: gui {
@@ -3148,7 +3834,7 @@ experiment "Simulation" type: gui {
 			species pluvial_network;
 			species people;
 			species car;
-			species project;
+		//	species project;
 			event mouse_down action:cell_management;
 			
 		}
@@ -3324,8 +4010,3 @@ experiment "Simulation" type: gui {
 		
 	}
 }
-	
-	
-	
-	
-	
