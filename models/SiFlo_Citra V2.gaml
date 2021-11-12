@@ -40,6 +40,9 @@ global {
 	
 	//shape file actions
 	shape_file bassin_shape_file <- shape_file("../results/bassin_retention.shp");
+	shape_file barrage_shape_file <- shape_file("../results/barrage.shp");
+	shape_file extension_nat_shape_file <- shape_file("../results/extention_PLU_N.shp");
+	shape_file noue_shape_file <- shape_file("../results/noues_routes.shp");
 	
 	
 	
@@ -75,10 +78,10 @@ global {
 	
 	bool first_flood_turn<-false;	
 		
-	float water_height_perception <- 1 #cm;
-	float water_height_danger_inside_energy_on <- 20 #cm;
-	float water_height_problem <- 5 #cm;
-	float water_height_danger_inside_energy_off <- 50 #cm;
+	float water_height_perception <- 5 #cm;
+	float water_height_danger_inside_energy_on <- 50 #cm;
+	float water_height_problem <- 10 #cm;
+	float water_height_danger_inside_energy_off <- 80 #cm;
 
 	float river_broad_maint <- 1 #m;
 	float river_depth_maint<- 1 #m;
@@ -360,9 +363,30 @@ int budget_env<-10;
 		{
 			type<-0;
 			shape<-scaled_by(shape,0.98); //juste pour réduire un peu la taille pour que ça reste dans le périmètre fixé sans déborder sur la route
-			depth<-3#m;
+			depth<-2#m;
 			volume<-depth*shape.area*0.8;
 		}
+		
+		create project from: barrage_shape_file
+		{
+			type<-1;
+			shape<-scaled_by(shape,0.98); 
+					}
+		
+		create project from: extension_nat_shape_file
+		{
+			type<-2;
+			shape<-scaled_by(shape,0.98); 
+		}
+		
+			create project from: noue_shape_file 
+		{
+			type<-3;
+			shape<-scaled_by(shape,0.98); 
+		}
+		
+
+		
 		}
 	
 	
@@ -1036,6 +1060,7 @@ action flowing2 {
 	
 
 	action update_road {
+		road_network_simple<-as_edge_graph(road where each.usable);
 		current_weights <- road as_map (each::each.shape.perimeter / each.speed_coeff);
 	}
 	
@@ -1044,6 +1069,7 @@ action flowing2 {
 		safe_roads <-road where ((each distance_to rivers) > 100#m );
 		road_network_custom[list<int>([])] <- (as_edge_graph(road) use_cache false) with_shortest_path_algorithm #NBAStar;
 		road_network_simple<-as_edge_graph(road);
+		
 		current_weights <- road as_map (each::each.shape.perimeter);
 	}
 
@@ -1313,7 +1339,16 @@ dead_people<-0;
 	list<file> images <- [
 		file("../images/bassin1.png"),
 		file("../images/bassin2.png"),
-		file("../images/bassin3.png")
+		file("../images/bassin3.png"),
+		file("../images/barrage 1.png"),
+		file("../images/barrage 2.png"),
+		file("../images/barrage 3.png"),
+		file("../images/natura 1.png"),
+		file("../images/natura 2.png"),
+		file("../images/natura 3.png"),
+		file("../images/noue 1.png"),
+		file("../images/noue 2.png"),
+		file("../images/noue 3.png")
 		//file("../images/alarm.jpg")
 	]; 
 	
@@ -1335,7 +1370,7 @@ dead_people<-0;
 			if action_type=0 {
 				write "Bassin de retention ; site 1";
 				ask project  {		visible<-false;		}
-				ask project where (each.type=0 and each.Niveau_act=1) {
+				ask project where (each.type=0 and each.Niveau_act=0) {
 					visible<-true;
 						result <- user_confirm("Confirmation dialog box","Voulez vous vraiment réaliser ce projet?");
 						if result{write "Bassin de retention réalisé";
@@ -1347,7 +1382,7 @@ dead_people<-0;
 			if action_type=1 {
 				write "Bassin de retention ; site 2";
 				ask project  {		visible<-false;		}
-				ask project where (each.type=0 and each.Niveau_act=2) {
+				ask project where (each.type=0 and each.Niveau_act=1) {
 					visible<-true;
 							result <- user_confirm("Confirmation dialog box","Voulez vous vraiment réaliser ce projet?");
 						if result{write "Bassin de retention réalisé";
@@ -1359,10 +1394,178 @@ dead_people<-0;
 			if action_type=2 {
 				write "Bassin de retention ; site 3";
 				ask project  {		visible<-false;		}
-				ask project where (each.type=0 and each.Niveau_act=3) {
+				ask project where (each.type=0 and each.Niveau_act=2) {
 					visible<-true;
 							result <- user_confirm("Confirmation dialog box","Voulez vous vraiment réaliser ce projet?");
 						if result{write "Bassin de retention réalisé";
+							do implement_project;
+							result<-false;
+						}
+				}
+			}
+			
+			if action_type=3 {
+				write "Barrage ; niveau 1";
+				ask project  {		visible<-false;		}
+				ask project where (each.type=1 and each.Niveau_act=0) {
+					visible<-true;
+							result <- user_confirm("Confirmation dialog box","Voulez vous vraiment réaliser ce projet?");
+						if result{write "Barrage réalisé";
+							do implement_project;
+							result<-false;
+					create obstacle {
+					shape<-self.shape;
+					location<-self.location;
+					height<-2#m;
+				ask cell overlapping self {
+					is_dyke<-true;
+					dyke_height<-myself.height;
+			}
+				}
+						}
+				}
+			}
+			
+				if action_type=4 {
+				write "Barrage ; niveau 2";
+				ask project  {		visible<-false;		}
+				ask project where (each.type=1 and each.Niveau_act=1) {
+					visible<-true;
+							result <- user_confirm("Confirmation dialog box","Voulez vous vraiment réaliser ce projet?");
+						if result{write "Barrage réalisé";
+							do implement_project;
+							result<-false;
+					create obstacle {
+					shape<-self.shape;
+					location<-self.location;
+					height<-3#m;
+				ask cell overlapping self {
+					is_dyke<-true;
+					
+					dyke_height<-myself.height;
+			}
+				}
+						}
+				}
+			}
+			
+			if action_type=5 {
+				write "Barrage ; niveau 3";
+				ask project  {		visible<-false;		}
+				ask project where (each.type=1 and each.Niveau_act=2) {
+		
+				
+					
+							result <- user_confirm("Confirmation dialog box","Voulez vous vraiment réaliser ce projet?");
+						if result{write "Barrage réalisé";
+							do implement_project;
+							result<-false;
+							visible<-true;
+					create obstacle {
+					shape<-self.shape;
+					location<-self.location;
+					height<-5#m;
+				ask cell overlapping self {
+					is_dyke<-true;
+					
+					dyke_height<-myself.height;
+			}
+				}
+						}
+				}
+			}
+			
+				if action_type=6 {
+				write "Extension de la zone natura 2000 ; niveau 1";
+				ask project  {		visible<-false;		}
+				ask project where (each.type=2 and each.Niveau_act=0) {
+	
+					visible<-true;
+						result <- user_confirm("Confirmation dialog box","Voulez vous vraiment réaliser ce projet?");
+						if result{write "Extension réalisée";
+							do implement_project;
+							result<-false;
+					create natura {
+					shape<-self.shape;
+					location<-self.location;
+				}
+						}
+				}
+			}
+			
+			
+				if action_type=7 {
+				write "Extension de la zone natura 2000 ; niveau 2";
+				ask project  {		visible<-false;		}
+				ask project where (each.type=2 and each.Niveau_act=1) {
+				
+					visible<-true;
+							result <- user_confirm("Confirmation dialog box","Voulez vous vraiment réaliser ce projet?");
+						if result{write "Extension réalisée";
+							do implement_project;
+							result<-false;
+										create natura {
+					shape<-self.shape;
+					location<-self.location;
+				}
+						}
+				}
+			}
+			
+			
+				if action_type=8 {
+				write "Extension de la zone natura 2000 ; niveau 3";
+				ask project  {		visible<-false;		}
+				ask project where (each.type=2 and each.Niveau_act=2) {
+					visible<-true;
+							result <- user_confirm("Confirmation dialog box","Voulez vous vraiment réaliser ce projet?");
+						if result{write "Extension réalisée";
+							do implement_project;
+							result<-false;
+										create natura {
+					shape<-self.shape;
+					location<-self.location;
+				}
+						}
+				}
+			}
+			
+				
+				if action_type=9 {
+				write "Réalisation de noues ; niveau 1";
+				ask project  {		visible<-false;		}
+				ask project where (each.type=3 and each.Niveau_act=0) {
+					visible<-true;
+							result <- user_confirm("Confirmation dialog box","Voulez vous vraiment réaliser ce projet?");
+						if result{write "Noue réalisée";
+							do implement_project;
+							result<-false;
+						}
+				}
+			}
+			
+			
+				if action_type=10 {
+				write "Réalisation de noues ; niveau 2";
+				ask project  {		visible<-false;		}
+				ask project where (each.type=3 and each.Niveau_act=1) {
+					visible<-true;
+							result <- user_confirm("Confirmation dialog box","Voulez vous vraiment réaliser ce projet?");
+						if result{write "Noue réalisée";
+							do implement_project;
+							result<-false;
+						}
+				}
+			}
+			
+			
+				if action_type=11 {
+				write "Réalisation de noues ; niveau 3";
+				ask project  {		visible<-false;		}
+				ask project where (each.type=3 and each.Niveau_act=2) {
+					visible<-true;
+							result <- user_confirm("Confirmation dialog box","Voulez vous vraiment réaliser ce projet?");
+						if result{write "Noue réalisée";
 							do implement_project;
 							result<-false;
 						}
@@ -1558,7 +1761,7 @@ list<cell> my_neigh_cells;
 float volume;
 float depth;
 float water_into<-0.0;
-float distance_application<-100#m;
+float distance_application<-200#m;
 
 
 action implement_project {
@@ -1600,7 +1803,7 @@ action implement_project {
 	ask world {do update_road_work;	}
 	my_cells<-cell overlapping self;
 	
-	my_neigh_cells<-cell where ((each distance_to self)<100#m); 
+	my_neigh_cells<-cell where ((each distance_to self)<distance_application); 
 	
 	//safe_roads <-road where ((each distance_to rivers) > 100#m );
 	
@@ -1630,14 +1833,6 @@ action making {
 
 
 action collect_water {
-	float water_to_collect;
-	ask my_cells {
-		if (myself.water_into+water_volume<myself.volume) {
-		myself.water_into<-myself.water_into+water_volume;
-		water_volume<-0.0;
-		do compute_water_altitude;
-		}
-	}
 		if (water_into<volume) {
 		ask my_neigh_cells {
 		if (myself.water_into+water_volume<myself.volume) {
@@ -1889,13 +2084,15 @@ species people skills: [moving]  {
 	bool inside<-true;
 	bool injuried<-false;
 	bool starting_at_home;
-
+	bool car_vulnerable<-flip(0.3);
+	
+	
 	bool know_flood_is_coming<-flip(0.8);
 	bool know_rules<-flip(0.3);
 		
 	float satisfaction<-0.5; //0: not satisfy at all, 1: very satisfied
-	float obedience<-1.0;
-	float proba_agenda<-0.1;  // quand il pleut, pas trop envie d'aller se promener
+	float obedience<-0.8;
+	float proba_agenda<-0.05;  // quand il pleut, pas trop envie d'aller se promener
 	float informed_on_flood<-0.8;
 	float informed_on_rules<-0.3;
 	
@@ -1918,6 +2115,7 @@ species people skills: [moving]  {
 	float danger_inside <- 0.0; //between 0 and 1 (1 danger of imeediate death)
 	float danger_outside <- 0.0; //between 0 and 1 (1 danger of imeediate death)
 	float proba_evacuation<-0.0;
+	float save_car<-0.3;
 	point current_target;
 	point final_target;
 
@@ -1948,7 +2146,7 @@ species people skills: [moving]  {
 		if (time mod 10#mn) = 0 {do test_proba;} //when: (time mod 10#mn) = 0
 		do my_perception;
 		if (time mod 10#mn) = 0 {if flip(proba_agenda) {doing_agenda<-true;}
-		if know_flood_is_coming and have_car and fear_level<0.2 {
+		if know_flood_is_coming and have_car and fear_level<0.2 and flip(save_car) and car_vulnerable{
 			doing_protect_car<-true;
 			doing_agenda<-false;
 			doing_evacuate<-false;
@@ -2597,7 +2795,14 @@ grid cell neighbors: 8 file: mnt_file {
 }
 
 /********************************************************************** */
-grid button width:3 height:3 
+//***********************************************************************************************************
+//***************************  BOUTONS  **********************************************************************
+//***********************************************************************************************************
+
+
+
+
+grid button width:3 height:4 
 {
 	int id <- int(self);
 	rgb bord_col<-#black;
