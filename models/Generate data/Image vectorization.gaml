@@ -23,7 +23,7 @@ global {
 	int num_rows_mnt <- 100;
 	
 	
-	int power_interpolation <- 1;
+
 	/*
 	 * Import the image to vectorize
 	 */
