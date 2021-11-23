@@ -28,20 +28,21 @@ global {
 	 * Import the image to vectorize
 	 */
 
-	image_file image_autoroute<- image_file("../../CityMap/autoroute_route-nationale_4.png");
-	image_file image_route<- image_file("../../CityMap/autres_routes_4.png");
-	image_file image_batiments_river<- image_file("../../CityMap/batiments_vallat_4.png");
-	image_file image_vert<- image_file("../../CityMap/espaces_naturels_mer_4.png");
-	image_file image_mnt <- image_file("../../CityMap/MNT_4.png");
+//	image_file image_autoroute<- image_file("../../CityMap/autoroute_route-nationale_4.png");
+//	image_file image_route<- image_file("../../CityMap/autres_routes_4.png");
+//	image_file image_batiments_river<- image_file("../../CityMap/batiments_vallat_4.png");
+//	image_file image_vert<- image_file("../../CityMap/espaces_naturels_mer_4.png");
+	image_file image_mnt <- image_file("../../CityMap/MNT_5.png");
+//	image_file image_mnt <- image_file("../../CityMap/MNT_4.png");
 
 	
-	bool zone_verte<-true;
-	bool batiment_riv<-true;
+	bool zone_verte<-false;
+	bool batiment_riv<-false;
 	bool mnt<-true;
 	bool route<-false;
 	
-	int res_x <- matrix(image_autoroute).columns;
-	int res_y <- matrix(image_autoroute).rows;
+	int res_x <- matrix(image_mnt).columns;
+	int res_y <- matrix(image_mnt).rows;
 	
 	
 	geometry shape <- rectangle(size_x,size_y);
@@ -89,7 +90,7 @@ global {
 				}
 			}
 			
-			save cell_mnt to:"../results/grid.asc" type:"asc";
+			save cell_mnt to:"../results/grid3.asc" type:"asc";
 		}
 	
 			
@@ -97,6 +98,7 @@ global {
 	
 	
 			//***************** cherche les zones vertes************************
+	 
 		if zone_verte { 	
 	 		do generate_agent("nature");
 		}
@@ -119,6 +121,8 @@ global {
 		write "EXPORT TO FILES";
 		
 	}
+	
+	
 	action generate_agent(string type) {
 		ask cell {
 			color <- color_per_type[type];
@@ -135,7 +139,7 @@ global {
 				create species(color_to_species[col]) from: geoms returns: agent_created {
 					shape <- shape simplification simplification_dist;
 				}
-				save agent_created type: shp to: "../results/" + (color_to_species[col]) + ".shp";
+			//	save agent_created type: shp to: "../results/" + (color_to_species[col]) + ".shp";
 			}
 		}
 		

@@ -15,7 +15,7 @@ global {
 
 //***************************  VARIABLES **********************************************************************
 
-	file mnt_file <- grid_file("../results/grid2.asc");
+	file mnt_file <- grid_file("../results/grid3.asc");
 	file my_data_flood_file <- csv_file("../includes/data_flood3.csv", ",");
 	file my_data_rain_file <- csv_file("../includes/data_rain.csv", ",");
 	shape_file res_buildings_shape_file <- shape_file("../results/residential_building.shp");
@@ -52,7 +52,7 @@ global {
 	//shape_file population_shape_file <- shape_file("../includes/city_environment/population.shp");
 	geometry shape <- envelope(mnt_file);
 
-
+	bool code_test_end<-false;
 	
 	map<list<int>,	graph> road_network_custom;
 	map<road, float> current_weights;
@@ -63,8 +63,6 @@ global {
 	int increment;
 	matrix data_flood;
 	matrix data_rain; 
-	list<building> obstacles;
-	float obstacle_height <- 0.0;
 	float ratio_received_water;
 	float cell_area;
 	int nb_people_begin;
@@ -123,8 +121,8 @@ global {
 	list<float> rain_intensity;
 	list<float> water_input_intensity;
 	
-	int flo_str<-2; 	//0: petite à 5 : très fort 
-	list<int> scen_flo<-[2,3,1,5];
+	int flo_str<-1; 	//0: petite à 5 : très fort 
+	list<int> scen_flo<-[1,3,1,5];
 	int incr_flo<-0;
 	
 	float default_plu_net<-0.1#m3/#s;
@@ -355,6 +353,12 @@ int budget_env<-10;
 		do create_people;		
 		
 
+
+			//	ask project where (each.type=0 and each.Niveau_act=1) {do implement_project;}
+			//	ask project where (each.type=0 and each.Niveau_act=2) {do implement_project;}
+			//	ask project where (each.type=0 and each.Niveau_act=3) {do implement_project;}
+ 
+
 	}
 	
 	
@@ -370,8 +374,24 @@ int budget_env<-10;
 		create project from: barrage_shape_file
 		{
 			type<-1;
-			shape<-scaled_by(shape,0.98); 
-					}
+			shape<-scaled_by(shape,0.98);
+			Niveau_act<-1;
+		}
+		
+			create project from: barrage_shape_file
+		{
+			type<-1;
+			shape<-scaled_by(shape,0.98);
+			Niveau_act<-2;
+		}
+		
+			create project from: barrage_shape_file
+		{
+			type<-1;
+			shape<-scaled_by(shape,0.98);
+			Niveau_act<-3;
+		}
+		
 		
 		create project from: extension_nat_shape_file
 		{
@@ -516,7 +536,9 @@ int budget_env<-10;
 		 
 		 		 
 	create obstacle from: wall_shape_file{
-			ask cell overlapping self {
+			my_cells <- cell overlapping self;
+			altitude <- my_cells min_of(each.altitude);
+			ask my_cells {
 					is_dyke<-true;
 					dyke_height<-myself.height;
 			}
@@ -601,11 +623,10 @@ int budget_env<-10;
 				water_height <- myself.river_height;
 				is_river <- true;
 			}
-
 		}
 		
 		
-			float prev_alt<-500#m;
+		float prev_alt<-500#m;
 	 	loop riv over:river_cells sort_by (each.location.x*100-each.location.y){
 				riv.river_broad<-river_broad_normal;
 				riv.altitude<-min([prev_alt,riv.altitude]);			
@@ -625,16 +646,11 @@ int budget_env<-10;
 							already<-true;
 				ask neighbors where (!each.is_river and !each.already and each.altitude>alt4) {altitude<-(altitude+2*alt4)/3;
 							already<-true;
-				
-				}
-						
-				}
-						
-				}
-				
-				
-				}
-				
+
+				}				
+				}				
+				}	
+				}	
 				}
 		}
 		
@@ -729,62 +745,75 @@ int budget_env<-10;
 			
 			loop while: it<it_max {
 			create people {
-				know_flood_is_coming<-flip(informed_on_flood);
-				know_rules<-flip(informed_on_rules);
+			//	know_flood_is_coming<-flip(informed_on_flood);
+			//	know_rules<-flip(informed_on_rules);
 				my_building<-myself;
-				starting_at_home<-flip(0.7);
-				if know_flood_is_coming {starting_at_home<-true;}
+				//starting_at_home<-flip(0.7);
+				starting_at_home<-true;
+				//if know_flood_is_coming {starting_at_home<-true;}
 				 if starting_at_home {
-				 	location<-any_location_in(myself.location);
+				 	location<-myself.location;
 				 }
-				 else {location<-any_location_in(one_of(building where (each.category>0))).location;				 	
-				 }
+			//	 else {location<-any_location_in(one_of(building where (each.category>0))).location;				 	 }
 				
-				current_stair <- rnd(my_building.nb_stairs);
-				if flip(0.1) {
+				current_stair <- 0;
+		/* 		if flip(0.1) {
 					doing_agenda<-true;
 					if starting_at_home{my_destination_building<- (one_of(building where (each.category>0)));}
 					else {my_destination_building<-myself;}
 					final_target <-my_destination_building.location;
 				}
-				
-				have_car <- false;
-				if flip(0.8) {
-				have_car <- true;
+			
+			*/	have_car <- true;
 				create car {
 					my_owner <- myself;
 					myself.my_car <- self;
+					
 					location <- myself.location;
 					float dist <- 100 #m;
+					is_parked<-false;
+					
 					using topology(world) {
-
-						list<parking> park_close<-parking where !each.is_full at_distance 300#m;
-						loop prk over:park_close {
-							if !is_parked {
-								add self to:prk.my_cars;
-								prk.nb_cars<-prk.nb_cars+1;
-								is_parked<-true;
-							//	location <-any_location_in(prk);
-								if prk.nb_cars=prk.capacity {prk.is_full<-true;}
-							}
+						list<parking> free_parking <- parking where !each.is_full at_distance 200#m sort_by (each.name);
+						parking closest_parking<- free_parking closest_to(myself);
+						if closest_parking!=nil {
+							location <-closest_parking.location;
+							is_parked<-true;
+							add self to:closest_parking.my_cars;
+							closest_parking.nb_cars<-closest_parking.nb_cars+1;
+							if closest_parking.nb_cars=closest_parking.capacity {closest_parking.is_full<-true;}
 						}
+						
+						
+					//			prk.nb_cars<-prk.nb_cars+1;
+					//			is_parked<-true;
+							//	location <-any_location_in(prk);
+					//			if prk.nb_cars=prk.capacity {prk.is_full<-true;}
+					
+				 
+					//	list<parking> park_close<-(parking where !each.is_full at_distance 200#m) sort_by (each.name); 
+					//	loop prk over:park_close {
+					//		if !is_parked {
+					//			add self to:prk.my_cars;
+					//			prk.nb_cars<-prk.nb_cars+1;
+					//			is_parked<-true;
+							//	location <-any_location_in(prk);
+					//			if prk.nb_cars=prk.capacity {prk.is_full<-true;}
+					//		}
+					//	}
 						if !is_parked {
-						list<road> roads_neigh <- (road where (each.category<2) at_distance dist);
+						list<road> roads_neigh <- (road where (each.category<2) at_distance dist) sort_by (each.name);
 						loop while: empty(roads_neigh) {
 							dist <- dist + 50;
 							roads_neigh <- (road at_distance dist);
 						}
-						road a_road <- roads_neigh[rnd_choice(roads_neigh collect each.shape.perimeter)];
-						location <- any_location_in(a_road);
+						road a_road <- roads_neigh closest_to(myself);
+						location <- a_road.location;
 						my_owner.heading <- first(a_road.shape.points) towards last(a_road.shape.points);
 						is_parked<-true;
-						}
 						}	
 				}	
-			
-			
-	
-					
+
 				}
 			
 			
@@ -838,7 +867,7 @@ int budget_env<-10;
 			if flo_str=1 {
 			time_simulation<-2#h;
 			
-			water_input_average<-30*10^3#m3/#h;
+			water_input_average<-30*10^4#m3/#h;
 			time_start_water_input<-0#h;
 			time_last_water_input<-2#h;
 			water_intensity_intensity_type<-0; 	//0 :const ; 1: croissant ; 2 : decroissant ; 3 : aleatoire
@@ -895,8 +924,6 @@ int budget_env<-10;
 			
 		} 
 
-	
- 
 		}
 		
 //***************************  END of INIT     **********************************************************************
@@ -937,11 +964,12 @@ int budget_env<-10;
 			mode_flood<-false;
 			write "Morts : "+dead_people;
 			write "Blessés : "+injuried_people;
-			write ("number of flooded car : " +length(car where (each.domaged)));
-			write ("number of flooded building: " +length(building where (each.serious_flood)));
-			write ("max hauteur d'eau : " +max_water_he);
-			ask project {write "remplissage bassin : "+water_into/volume;}
+			write ("Voitures inondés : " +length(car where (each.domaged)));
+			write ("Batiment inondé: " +length(building where (each.serious_flood)));
+			write ("Max hauteur d'eau : " +max_water_he);
+			write ("Nb de cells avec 1m d'eau : "+length(flooded_cell));
 			do update_indicators; 
+			code_test_end<-false;
 			do pause;
 			ask cell {
 				water_volume<-0.0;
@@ -959,7 +987,7 @@ int budget_env<-10;
 		date_in<-string(time_flo.year);
 		do reinitiate_indicators;
 		write ("Phase de gestion");
-		do pause;
+	//	do pause;
 		mode_flood<-true;
 		time_start<-time;
 		first_flood_turn<-true;
@@ -987,16 +1015,14 @@ ask cell where (each.water_height>1#cm and each.is_pluvial_network) {
 ask cell where (length(each.neighbors)<8) {
 water_volume<-max([0,water_volume*length(neighbors)/8]);
 }
-do flowing2;
-ask cell where (each.is_dyke and each.water_height>1#m) {do breaking_dyke;}
+do flowing;
+//ask cell where (each.is_dyke and each.water_height>1#m) {do breaking_dyke;}
 
 }
 
 
-action flowing2 {
+action flowing {
 		int incre<-0;
-			
-			
 			ask cell where !each.is_sea parallel: parallel_computation {
 				if time>=time_start+time_start_rain and time-time_start-time_start_rain<time_last_rain
 				{
@@ -1037,24 +1063,20 @@ action flowing2 {
 			
 		
 			list<cell> flowing_cell <- cell where (each.water_volume>1 #m3);
-		//	list<cell> cells_ordered <- flowing_cell sort_by (each.water_altitude);
-			list<cell> cells_ordered <- flowing_cell sort_by (each.altitude);
-			ask cells_ordered {do flow2;}
+			list<cell> cells_ordered <- flowing_cell sort_by (each.water_altitude);
+		//	list<cell> cells_ordered <- flowing_cell sort_by (each.altitude);
+			ask cells_ordered {do flow;}
 			ask project{do making;}
-			ask remove_duplicates((cell where (each.water_height > 0)) accumulate each.my_buildings) parallel: parallel_computation{do update_water;}
-			ask car parallel: parallel_computation{do update_state;}
-			ask road parallel: parallel_computation{do update_flood;}
+			ask remove_duplicates((cell where (each.water_height > 0)) accumulate each.my_buildings) {do update_water;}
+		//	ask car parallel: parallel_computation{do update_state;}
+			ask car {do update_state;}
+			ask road {do update_flood;}
+			ask (cell where (each.water_height>=0.3#m)) { add self to:flooded_cell;}
 			flooded_cell<-remove_duplicates(flooded_cell);
-	
-				
-		
-		
-		ask building  parallel: parallel_computation {do update_water_color;}
-			
-		
-		float max_wh_bd <- max(building collect each.water_height);
-		float max_wh <- max(cell collect each.water_height);
-		ask cell  parallel: parallel_computation {do update_color;}
+			ask building  {do update_water_color;}
+			float max_wh_bd <- max(building collect each.water_height);
+			float max_wh <- max(cell collect each.water_height);
+			ask cell   {do update_color;}
 	}
 	
 	
@@ -1069,7 +1091,6 @@ action flowing2 {
 		safe_roads <-road where ((each distance_to rivers) > 100#m );
 		road_network_custom[list<int>([])] <- (as_edge_graph(road) use_cache false) with_shortest_path_algorithm #NBAStar;
 		road_network_simple<-as_edge_graph(road);
-		
 		current_weights <- road as_map (each::each.shape.perimeter);
 	}
 
@@ -1363,15 +1384,12 @@ dead_people<-0;
 					bord_col<-#red;
 				} else {
 					action_type<- -1;
-					ask project  {		visible<-false;		}
 				}
 				
 			}
 			if action_type=0 {
 				write "Bassin de retention ; site 1";
-				ask project  {		visible<-false;		}
-				ask project where (each.type=0 and each.Niveau_act=0) {
-					visible<-true;
+				ask project where (each.type=0 and each.Niveau_act=1) {
 						result <- user_confirm("Confirmation dialog box","Voulez vous vraiment réaliser ce projet?");
 						if result{write "Bassin de retention réalisé";
 							do implement_project;
@@ -1381,9 +1399,7 @@ dead_people<-0;
 			}
 			if action_type=1 {
 				write "Bassin de retention ; site 2";
-				ask project  {		visible<-false;		}
-				ask project where (each.type=0 and each.Niveau_act=1) {
-					visible<-true;
+				ask project where (each.type=0 and each.Niveau_act=2) {
 							result <- user_confirm("Confirmation dialog box","Voulez vous vraiment réaliser ce projet?");
 						if result{write "Bassin de retention réalisé";
 							do implement_project;
@@ -1393,9 +1409,7 @@ dead_people<-0;
 			}
 			if action_type=2 {
 				write "Bassin de retention ; site 3";
-				ask project  {		visible<-false;		}
-				ask project where (each.type=0 and each.Niveau_act=2) {
-					visible<-true;
+				ask project where (each.type=0 and each.Niveau_act=3) {
 							result <- user_confirm("Confirmation dialog box","Voulez vous vraiment réaliser ce projet?");
 						if result{write "Bassin de retention réalisé";
 							do implement_project;
@@ -1406,89 +1420,44 @@ dead_people<-0;
 			
 			if action_type=3 {
 				write "Barrage ; niveau 1";
-				ask project  {		visible<-false;		}
-				ask project where (each.type=1 and each.Niveau_act=0) {
-					visible<-true;
-							result <- user_confirm("Confirmation dialog box","Voulez vous vraiment réaliser ce projet?");
+				ask project where (each.type=1) {
+						result <- user_confirm("Confirmation dialog box","Voulez vous vraiment réaliser ce projet?");
 						if result{write "Barrage réalisé";
 							do implement_project;
 							result<-false;
-					create obstacle {
-					shape<-self.shape;
-					location<-self.location;
-					height<-2#m;
-				ask cell overlapping self {
-					is_dyke<-true;
-					dyke_height<-myself.height;
-			}
-				}
-						}
+					}
 				}
 			}
 			
 				if action_type=4 {
 				write "Barrage ; niveau 2";
-				ask project  {		visible<-false;		}
-				ask project where (each.type=1 and each.Niveau_act=1) {
-					visible<-true;
+				ask project where (each.type=1) {
 							result <- user_confirm("Confirmation dialog box","Voulez vous vraiment réaliser ce projet?");
 						if result{write "Barrage réalisé";
 							do implement_project;
 							result<-false;
-					create obstacle {
-					shape<-self.shape;
-					location<-self.location;
-					height<-3#m;
-				ask cell overlapping self {
-					is_dyke<-true;
-					
-					dyke_height<-myself.height;
-			}
-				}
 						}
 				}
 			}
 			
 			if action_type=5 {
 				write "Barrage ; niveau 3";
-				ask project  {		visible<-false;		}
-				ask project where (each.type=1 and each.Niveau_act=2) {
-		
-				
-					
+				ask project where (each.type=1) {
 							result <- user_confirm("Confirmation dialog box","Voulez vous vraiment réaliser ce projet?");
 						if result{write "Barrage réalisé";
 							do implement_project;
 							result<-false;
-							visible<-true;
-					create obstacle {
-					shape<-self.shape;
-					location<-self.location;
-					height<-5#m;
-				ask cell overlapping self {
-					is_dyke<-true;
-					
-					dyke_height<-myself.height;
-			}
-				}
 						}
 				}
 			}
 			
 				if action_type=6 {
 				write "Extension de la zone natura 2000 ; niveau 1";
-				ask project  {		visible<-false;		}
-				ask project where (each.type=2 and each.Niveau_act=0) {
-	
-					visible<-true;
+				ask project where (each.type=2 and each.Niveau_act=1) {
 						result <- user_confirm("Confirmation dialog box","Voulez vous vraiment réaliser ce projet?");
 						if result{write "Extension réalisée";
 							do implement_project;
 							result<-false;
-					create natura {
-					shape<-self.shape;
-					location<-self.location;
-				}
 						}
 				}
 			}
@@ -1496,18 +1465,11 @@ dead_people<-0;
 			
 				if action_type=7 {
 				write "Extension de la zone natura 2000 ; niveau 2";
-				ask project  {		visible<-false;		}
-				ask project where (each.type=2 and each.Niveau_act=1) {
-				
-					visible<-true;
+				ask project where (each.type=2 and each.Niveau_act=2) {
 							result <- user_confirm("Confirmation dialog box","Voulez vous vraiment réaliser ce projet?");
 						if result{write "Extension réalisée";
 							do implement_project;
 							result<-false;
-										create natura {
-					shape<-self.shape;
-					location<-self.location;
-				}
 						}
 				}
 			}
@@ -1515,17 +1477,11 @@ dead_people<-0;
 			
 				if action_type=8 {
 				write "Extension de la zone natura 2000 ; niveau 3";
-				ask project  {		visible<-false;		}
-				ask project where (each.type=2 and each.Niveau_act=2) {
-					visible<-true;
+				ask project where (each.type=2 and each.Niveau_act=3) {
 							result <- user_confirm("Confirmation dialog box","Voulez vous vraiment réaliser ce projet?");
 						if result{write "Extension réalisée";
 							do implement_project;
 							result<-false;
-										create natura {
-					shape<-self.shape;
-					location<-self.location;
-				}
 						}
 				}
 			}
@@ -1533,9 +1489,7 @@ dead_people<-0;
 				
 				if action_type=9 {
 				write "Réalisation de noues ; niveau 1";
-				ask project  {		visible<-false;		}
-				ask project where (each.type=3 and each.Niveau_act=0) {
-					visible<-true;
+				ask project where (each.type=3 and each.Niveau_act=1) {
 							result <- user_confirm("Confirmation dialog box","Voulez vous vraiment réaliser ce projet?");
 						if result{write "Noue réalisée";
 							do implement_project;
@@ -1547,10 +1501,8 @@ dead_people<-0;
 			
 				if action_type=10 {
 				write "Réalisation de noues ; niveau 2";
-				ask project  {		visible<-false;		}
-				ask project where (each.type=3 and each.Niveau_act=1) {
-					visible<-true;
-							result <- user_confirm("Confirmation dialog box","Voulez vous vraiment réaliser ce projet?");
+				ask project where (each.type=3 and each.Niveau_act=2) {
+						result <- user_confirm("Confirmation dialog box","Voulez vous vraiment réaliser ce projet?");
 						if result{write "Noue réalisée";
 							do implement_project;
 							result<-false;
@@ -1561,9 +1513,7 @@ dead_people<-0;
 			
 				if action_type=11 {
 				write "Réalisation de noues ; niveau 3";
-				ask project  {		visible<-false;		}
-				ask project where (each.type=3 and each.Niveau_act=2) {
-					visible<-true;
+				ask project where (each.type=3 and each.Niveau_act=3) {
 							result <- user_confirm("Confirmation dialog box","Voulez vous vraiment réaliser ce projet?");
 						if result{write "Noue réalisée";
 							do implement_project;
@@ -1613,27 +1563,7 @@ dead_people<-0;
 }*/
 
 
-action create_obstacle {
-		
-		if action_type=0 and second_point{	//dyke
-					geometry line_dyke<-line(first_location,#user_location);	
-					create obstacle {shape<-line_dyke;	
-					ask cell overlapping self {
-						is_dyke<-true;
-						dyke_height<-myself.height;
-							}
-					}	
-						write ("digue créée ");
-				}
-				
-			if action_type=0 and !second_point{	//dyke
-					first_location<-#user_location;	
-					write ("choose another point ");
-				}
-				
-			if 	second_point{second_point<-false;}
-			else {second_point<-true;}
-}
+
 
 
 
@@ -1694,6 +1624,24 @@ aspect default {
 	}
 }
 
+
+
+//***********************************************************************************************************
+//*************************** OBSTACLE **********************************************************************
+//***********************************************************************************************************
+species obstacle {
+	float height <- 2#m;
+	float altitude;
+	int resistance<-2;
+	rgb color<-#violet;
+	bool is_destroyed<-false;
+	list<cell> my_cells;
+	
+	aspect default {
+		draw shape+(0.5,10,#flat)  depth:height color: color at:location+{0,0,height};
+	}
+	
+}
 
 
 
@@ -1765,7 +1713,16 @@ float distance_application<-200#m;
 
 
 action implement_project {
+	//type 0 : bassin
+	//type 1 : barrage
+	//type 2 : Zone nat
+	//type 3 : noue
+	
+	
 	implemented<-true;
+	
+	
+	if type=0 { //bassin
 	visible<-true;
 	ask building overlapping self {
 		ask people where (each.my_building=self) {
@@ -1783,43 +1740,69 @@ action implement_project {
 	location<-(building closest_to(myself)).location;
 	satisfaction<-rnd(5)/10;
 	}
-	
-	ask parking  overlapping self {
-	do die;	
-	}
-
-	ask green_area  overlapping self {
-	do die;	
-	}
-	
-	ask pluvial_network  overlapping self {
-	do die;	
-	}
-	
-	ask supp_roads {
-	do die;	
-	}
-	
+	ask parking  overlapping self {do die;}
+	ask green_area  overlapping self {do die;}
+	ask pluvial_network  overlapping self {do die;}
+	ask obstacle  overlapping self {do die;}
+	ask supp_roads {do die;}
 	ask world {do update_road_work;	}
 	my_cells<-cell overlapping self;
-	
-	my_neigh_cells<-cell where ((each distance_to self)<distance_application); 
-	
-	//safe_roads <-road where ((each distance_to rivers) > 100#m );
-	
-	/*ask my_cells{
-		altitude<- (myself.my_cells min_of(each.altitude));
-		loop ne over:neighbors {
-			add ne to:myself.my_neigh_cells;	
-		}
-	}
-	my_neigh_cells<-cells 
-	
-	remove_duplicates(my_neigh_cells);
-	
-	*/
+	my_neigh_cells<-cell where ((each distance_to self)<distance_application) +	my_neigh_cells;
+	my_neigh_cells<-remove_duplicates(my_neigh_cells); 
+
 }
 
+	if type=1 { //barrage
+		create obstacle {
+			shape<-myself.shape;
+			location<-myself.location;
+			height<-3#m*(myself.Niveau_act);
+			my_cells <- cell overlapping self;
+			altitude <- my_cells min_of(each.altitude);
+			ask my_cells {
+					is_dyke<-true;
+					dyke_height<-myself.height;
+					}
+			}
+}
+
+	if type=2 { //zone nat
+		ask building overlapping self {
+		ask people where (each.my_building=self) {
+			my_building<-one_of((building where (each.category=0)));
+		}
+		do die;	
+		}
+		ask parking  overlapping self {do die;}
+		ask obstacle  overlapping self {do die;}
+		create green_area {
+			shape<-myself.shape;
+			location<-myself.location;
+			my_cells <- cell overlapping self;
+			ask my_cells {
+				plu_typ<-3;
+				do see_plu;
+			}
+			}
+}
+
+
+	if type=3 { //noue
+		create pluvial_network {
+			shape<-myself.shape;
+			location<-myself.location;
+			my_cells <- cell overlapping self;
+			altitude <- my_cells min_of(each.altitude);
+			
+			ask my_cells{
+				is_pluvial_network<-true;
+				water_evacuation_pl_net<-0.2#m3/#s;
+			}
+			}
+}
+
+
+}
 
 
 
@@ -1847,7 +1830,7 @@ action collect_water {
 
 
 	aspect default {
-	if visible or implemented{
+	if visible {
 		draw shape color:#gamared border:#black ;		
 		}
 	}
@@ -1947,15 +1930,15 @@ species building {
 	list<cell> my_cells;
 	list<cell> my_neighbour_cells;
 	float altitude;
-	float impermeability_init <- (0.3+rnd(0.5)) ; //1: impermeable, 0:permeable
+	float impermeability_init <- 0.7 ; //1: impermeable, 0:permeable
 	float max_impermeability <- impermeability_init + max_impermeability_building_increase max: 1.0;
 	float impermeability <- impermeability_init max: max_impermeability; 
 	float water_height <- 0.0;
 	float water_evacuation <- 0.5 #m3 / #mn;
 	point my_location;
-	float bd_height <- rnd(3,10) #m ;
+	float bd_height <- 5 #m ;
 	float state <- 1.0; //entre 0 et 1
-	float init_vulnerability <- rnd(1.0);
+	float init_vulnerability <- 0.7;
 	float min_vulnerability <- init_vulnerability - max_vulnerability_building_decrease min: 0.0;
 	float vulnerability  <- init_vulnerability min: min_vulnerability; //between 0.1 et 1 (very vulnerable) 
 	bool is_water;
@@ -2018,7 +2001,7 @@ species car {
 	point my_location;
 	rgb my_color <- #green;
 	bool domaged<-false;
-	float problem_water_height<-(10+rnd(20))#cm;
+	float problem_water_height<-30#cm;
 	bool usable<-true;
 	bool is_parked<-false;
 	
@@ -2084,11 +2067,11 @@ species people skills: [moving]  {
 	bool inside<-true;
 	bool injuried<-false;
 	bool starting_at_home;
-	bool car_vulnerable<-flip(0.3);
+	bool car_vulnerable<-false;
 	
 	
-	bool know_flood_is_coming<-flip(0.8);
-	bool know_rules<-flip(0.3);
+	bool know_flood_is_coming<-false;
+	bool know_rules<-false;
 		
 	float satisfaction<-0.5; //0: not satisfy at all, 1: very satisfied
 	float obedience<-0.8;
@@ -2098,8 +2081,8 @@ species people skills: [moving]  {
 	
 	float flooded_road_percep_distance<-1000#m;
 	
-	float water_height_danger_car <- (10 + rnd(30)) #cm;
-	float water_height_danger_pied <- (10 + rnd(90)) #cm;
+	float water_height_danger_car <- 20 #cm;
+	float water_height_danger_pied <- 80 #cm;
 	
 	float my_speed {
 		if in_car {
@@ -2130,7 +2113,7 @@ species people skills: [moving]  {
 	list<int> known_blocked_roads;
 	
 	graph current_graph;
-	float outside_test_period <- rnd(15,30) #mn;
+	float outside_test_period <-20 #mn;
 	cell my_current_cell;
 	
 	float water_level <- 0.0;
@@ -2143,7 +2126,7 @@ species people skills: [moving]  {
 	
 
 	reflex acting when:mode_flood {
-		if (time mod 10#mn) = 0 {do test_proba;} //when: (time mod 10#mn) = 0
+		if (time mod 10#mn) = 0 {do test_danger;} //when: (time mod 10#mn) = 0
 		do my_perception;
 		if (time mod 10#mn) = 0 {if flip(proba_agenda) {doing_agenda<-true;}
 		if know_flood_is_coming and have_car and fear_level<0.2 and flip(save_car) and car_vulnerable{
@@ -2259,23 +2242,19 @@ species people skills: [moving]  {
 		}
 	}
 	
-	action test_proba  {
-		if flip(max_danger_outside) or flip(max_danger_inside) {
-				if flip(max_danger_outside/10) or flip(max_danger_inside/10) {
-					do to_die;
-				} else {
-					if injuried=false {
+	
+	action test_danger  {
+		if max_danger_outside>0.8 or max_danger_inside>0.8 {do to_die;} 
+		else {if max_danger_outside>0.3 or max_danger_inside>0.3 {
 							injuried<-true;
 							injuried_people <- injuried_people+1;
 						}
 			}
-			
-		}
 		max_danger_inside <- 0.0;
 		max_danger_outside <- 0.0;
 	}
 	
-		
+
 	action to_die {
 			dead_people <- dead_people + 1;
 			if (injuried) {
@@ -2452,7 +2431,7 @@ species people skills: [moving]  {
 		if (final_target = nil) {
 			//road a_road <- safe_roads[rnd_choice(safe_roads collect (1.0/(1 + each.location distance_to my_car.location)))];
 			road a_road <- one_of(safe_roads);
-			final_target <- any_location_in(a_road);
+			final_target <- a_road.location;
 			current_target <- my_car.location;
 		} else {
 			do moving;
@@ -2462,7 +2441,7 @@ species people skills: [moving]  {
 			if (current_target = location) {
 				if (current_target = final_target) {
 					in_car <- false;
-					current_target <- any_location_in(my_building);
+					current_target <- my_building.location;
 					return_home <- true;
 				} else {
 					if (return_home) {
@@ -2519,20 +2498,7 @@ species people skills: [moving]  {
 
 
 
-//***********************************************************************************************************
-//*************************** OBSTACLE **********************************************************************
-//***********************************************************************************************************
-species obstacle {
-	float height <- 2#m;
-	int resistance<-2;
-	rgb color<-#violet;
-	bool is_destroyed<-false;
 
-		aspect default {
-		draw shape+(0.5,10,#flat)  depth:height color: color at:location+{0,0,height};
-	}
-	
-}
 
 
 //***********************************************************************************************************
@@ -2575,7 +2541,6 @@ grid cell neighbors: 8 file: mnt_file {
 	
 	bool is_critical<-false;
 	
-	float K<-25.0; //coefficient de Strickler
 	float slope;
 	float water_abs<-0.0;
 	float water_abs_max<-0.01;
@@ -2608,14 +2573,14 @@ grid cell neighbors: 8 file: mnt_file {
 	action breaking_dyke{
 		water_pressure<- min([1.0, water_height / dyke_height]);		
 		float timing <-step/1 #mn;
-				loop while:timing>=0 {
+			/* 	loop while:timing>=0 {
 					if flip(breaking_probability*water_pressure) {
 						is_dyke<-false;
 						dyke_height<-0#m;
 						//ask obstacle overlaping myself {} à faire
 					}
 					timing<-timing-1;
-		}
+		}*/
 	}
 	
 	
@@ -2664,9 +2629,6 @@ grid cell neighbors: 8 file: mnt_file {
 			}
 			water_volume_no_river<-water_volume-vol_river;
 			}
-			
-	//		if is_river {water_river_height<-min([water_volume/(sqrt(cell_area)*river_broad),river_depth]);}
-	//		else {water_river_height<-0.0;}
 			water_height<-max([0,water_volume_no_river/cell_area]);
 			water_altitude<-altitude -river_depth+water_river_height+ water_height;
 			if water_height>1#m {is_critical<-true;}
@@ -2676,68 +2638,37 @@ grid cell neighbors: 8 file: mnt_file {
 
 
 	//Action to flow the water 
-	action flow2 {
+	action flow {
 		is_flowed<-false;
+		do absorb_water;	
 		if (water_volume>10) {	
 			int nb_neighbors<-length(neighbors);   
 			list<cell> neighbour_cells_al <- neighbors where (each.already);
 			list<cell> cell_to_flow;		
-	//		V<-3#m/#s;
-	//		dp<-V*step; //distance parcourue en 1 step
-			//prop<-min([1,max([0.1,(dp-sqrt(cell_area))/sqrt(cell_area)])]); //proportion eau transmise
-			prop<-1.0;
-		//	volume_distrib<-max([0,water_volume*prop]);
+			prop<-0.9;
 			volume_distrib<-water_volume*prop;
-			
-			
 			float w_a<-water_altitude;
-		//	add self to:cell_to_flow;
-			ask neighbour_cells_al {
-			//	do absorb_water;	
-				if (is_river_full and w_a > water_altitude and (w_a > (altitude+obstacle_height-river_depth))) or (!is_river_full and w_a > water_altitude and (w_a > (altitude-river_depth))) {
+			ask neighbour_cells_al {	
+				//if (is_river_full and w_a > water_altitude and (w_a > (altitude+dyke_height-river_depth))) or (!is_river_full and w_a > water_altitude and (w_a > (altitude-river_depth))) {
+				if (is_river_full and w_a > water_altitude and (w_a > (altitude+dyke_height-river_depth))) {
 					add self to:cell_to_flow;
-					ask neighbors where (each.already) {
-						if (is_river_full and w_a > water_altitude and (w_a > (altitude+obstacle_height-river_depth))) or (!is_river_full and w_a > water_altitude and (w_a > (altitude-river_depth))) {
-						//	add myself to:cell_to_flow;
-							ask neighbors where (each.already) {
-								if (is_river_full and w_a > water_altitude and (w_a > (altitude+obstacle_height-river_depth))) or (!is_river_full and w_a > water_altitude and (w_a > (altitude-river_depth))) {
-								//	add myself to:cell_to_flow;					
-								}
-								}
-							}
-							}
 						}
 			}
 
 					flow_cells <- remove_duplicates(cell_to_flow);	
 					float tot_den<-flow_cells sum_of (max([0,w_a-(each.altitude-each.river_depth)]));
-		//			write name;
-		//			write tot_den;
-		//			write flow_cells;
-		//			write "************************";
 					
-				//	remove self from:(cell_to_flow);					
 					if (!empty(flow_cells) and tot_den>0) {			
 						is_flowed<-true;
-			
-						//prop_flow<-1/length(flow_cells);
-						//float slope_sum<-flow_cells sum_of(slope_neigh[each]);
+
 						ask flow_cells {
-							prop_flow<-(w_a-(altitude-river_depth))/tot_den;
+							prop_flow<-(w_a-(altitude+dyke_height-river_depth))/tot_den;
 							volume_distrib_cell<-with_precision(myself.volume_distrib*prop_flow,4);
 							water_volume <- water_volume + volume_distrib_cell;	
 							do compute_water_altitude;
 							
 						} 
 				 		water_volume <- water_volume - volume_distrib;
-				 		
-				 //		write "water distrib : "+(volume_distrib);
-				 //		write "vol distrib cell : "+flow_cells sum_of(each.volume_distrib_cell);
-				 //		write "wv-vd : "+(volume_distrib);
-				 //		write "vol distrib cell : "+flow_cells sum_of(each.volume_distrib_cell);
-				 //		write "volume_distrib : "+volume_distrib;
-				 //		write "vol distrib cell : "+flow_cells sum_of(each.prop_flow);
-				 //		write "tot_den : "+tot_den;
 						do compute_water_altitude;
 					
 			} 
@@ -2753,7 +2684,11 @@ grid cell neighbors: 8 file: mnt_file {
 
 	//Update the color of the cell
 	action update_color {
-		if (!is_sea) {color<-rgb(int(min([255,max([245 - 0.8 *altitude, 0])])), int(min([255,max([245 - 1.2 *altitude, 0])])), int(min([255,max([0,220 - 2 * altitude])])));}
+		if (!is_sea) {
+//			color<-rgb(int(min([255,max([245 - 0.8 *altitude, 0])])), int(min([255,max([245 - 1.2 *altitude, 0])])), int(min([255,max([0,220 - 2 * altitude])])));
+			
+			color<-rgb(int(min([255,max([245 - 4 *altitude, 0])])), int(min([255,max([245 - 6 *altitude, 0])])), int(min([255,max([0,220 - 10 * altitude])])));
+		}
 	
 		int val_water <- 0;
 
@@ -2776,9 +2711,6 @@ grid cell neighbors: 8 file: mnt_file {
 	}
 
 	aspect map {
-	
-//		if is_dyke{	draw rectangle(sqrt(cell_area)#m,3#m) depth:dyke_height rotate:45 color:#darkcyan;	}
-	//	if !plu_mod {draw shape  depth:altitude+water_height color: color border: #black;	}
 		if !plu_mod {draw shape   color: color ;	}
 		else {draw shape  color: color_plu;	}
 		
@@ -2788,7 +2720,7 @@ grid cell neighbors: 8 file: mnt_file {
 	}
 
 	aspect map3D {		
-		draw square(sqrt(cell_area)) color:color depth:altitude ;
+		draw square(sqrt(cell_area)) color:color depth:water_altitude ;
 
 	}
 
@@ -3183,10 +3115,14 @@ experiment "Simulation" type: gui {
 				color:#green;
 				//marker_shape:marker_circle ;
 			}
-		
-		
 		}
 		
 		
 	}
+}
+
+
+experiment Tests type: batch keep_seed: true repeat: 3 until:code_test_end {
+	
+	
 }
