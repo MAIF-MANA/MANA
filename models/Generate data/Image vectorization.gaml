@@ -16,7 +16,7 @@ global {
 	float size_x <- 3.5#km;
 	float size_y <- 2.5#km;
 	
-	float altitude_color_factor<-2.084;
+	float max_altitude<-250.0 #m ;
 	
 	float max_coeff_dist <- 0.1;
 	int num_cols_mnt <- 140;
@@ -55,7 +55,7 @@ global {
 		rgb([57,181,74])::string(green_area),rgb([96,56,19])::string(erp),rgb([37,170,225])::string(sea), rgb([159,31,99])::string(market)
 	];
 	
-		init {
+	init {
 
 		float t <- machine_time;
 		
@@ -70,6 +70,16 @@ global {
 	
 	
 		if (mnt) {
+			
+			ask cell {
+				color <-rgb( (image_mnt) at {grid_x ,grid_y }) ;
+				
+				
+			}
+			int max_color <- cell max_of each.color.red;
+			ask cell {
+			 	altitude <- (1 - (color.red)/max_color) *  max_altitude;
+			 }
 			using topology(world) {
 				
 				ask cell_mnt_extract{

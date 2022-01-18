@@ -14,8 +14,8 @@ global {
 
 //***************************  VARIABLES **********************************************************************
 
-	string output_name <- "grid2.asc";
-	file mnt_file <- grid_file("../../results/grid.asc");
+	string output_name <- "grid4.asc";
+	file mnt_file <- grid_file("../../results/grid3.asc");
 	shape_file waterways_shape_file <- shape_file("../../results/river.shp");
 	geometry shape <- envelope(mnt_file);
 	
@@ -29,10 +29,16 @@ global {
 			geometry rivers <- union(river collect each.shape);
 			
 			list<cell> river_cells<-cell where (each.is_river);
-			list<cell>	clo_riv_cells <- cell where (((each.location distance_to rivers) <= 300#m));
-			list<cell>	active_cells<-clo_riv_cells where (each.grid_x<36 and each.grid_y<24);
+			list<cell>	active_cells<-river_cells where (each.grid_x<45 and each.grid_y<25);
+			list<cell>	less_active_cells<-river_cells-active_cells;
+			ask cell {
+				grid_value<-grid_value*250/169;
+				
+				do update_color;
+			}
 			
-			ask cell {do update_color;}
+/*			
+			
 			ask (active_cells where (!each.is_river)) {
 			//list<cell>	close_river_cells <- river_cells where (((each.location distance_to self) <= 60#m));		
 			close_river_cell <-river_cells closest_to(self);
@@ -42,13 +48,64 @@ global {
 			if grid_value<close_river_cell.grid_value {grid_value<-grid_value+3#m;}
 			//grid_value<-min([grid_value,min_alt]);
 						}
+	 */	
 		
+			
+		
+		
+	 		float prev_alt<-500.0;
+	loop riv over:river_cells sort_by (each.location.x*100-each.location.y){
+				riv.grid_value<-min([prev_alt,riv.grid_value]);			
+				prev_alt<-riv.grid_value;
+				ask riv.neighbors where (!each.is_river and each.grid_value>prev_alt) {
+					grid_value<-(grid_value+2*prev_alt)/3; 
+					already<-true;
+					float alt<-grid_value;
+					ask neighbors where (!each.is_river and !each.already and each.grid_value>alt) {grid_value<-(grid_value+2*alt)/3;
+						float alt2<-grid_value;
+						already<-true;
+						ask neighbors where (!each.is_river and !each.already and each.grid_value>alt2) {grid_value<-(grid_value+2*alt2)/3;
+							float alt3<-grid_value;
+							already<-true;
+				ask neighbors where (!each.is_river and !each.already and each.grid_value>alt3) {grid_value<-(grid_value+2*alt3)/3;
+							float alt4<-grid_value;
+							already<-true;
+				ask neighbors where (!each.is_river and !each.already and each.grid_value>alt4) {grid_value<-(grid_value+2*alt4)/3;
+							already<-true;
+
+				}				
+				}				
+				}	
+				}	
+				}
+		}
+		
+			ask cell {already<-false;}
+		 	loop riv over:river_cells {
+				riv.grid_value<-max([0,riv.grid_value*0.92]);	
+				ask riv.neighbors where (!each.is_river and !each.already) {
+					grid_value<-max([0,grid_value*0.95]);
+					already<-true;
+				}
+			}
+			
+				loop riv over:river_cells {
+				ask riv.neighbors where (!each.is_river) {
+						ask neighbors where (!each.is_river and !each.already) {
+					grid_value<-max([0,grid_value*0.98]);
+					already<-true;
+				}
+				}
+			}
+		
+		
+
 		
 		
 		write "grid value updated";
 		save cell to:"../../results/"+output_name type: asc;
 		write "file saved";
-		
+		write cell max_of(each.grid_value);
 	}
 	
 	
@@ -81,7 +138,9 @@ global {
 
 grid cell neighbors: 8 file: mnt_file {
 	bool is_river <- false;
-	cell close_river_cell;
+	bool already;
+
+
 	action update_color {
 		int val_water <- 0;
 		if (is_river) {color<-#blue;}
@@ -97,6 +156,11 @@ grid cell neighbors: 8 file: mnt_file {
 
 	}
 	
+	aspect map3D {		
+		draw square(sqrt(shape.area)) color:color depth:grid_value ;
+
+	}
+	
 	}
 	
 	
@@ -107,6 +171,11 @@ grid cell neighbors: 8 file: mnt_file {
 			species river refresh: false;
 
 			}
+			
+				display map3D type: opengl background: #black draw_env: false {
+			grid cell  triangulation:false refresh: true ;
+			species cell  refresh: true aspect:map3D;				
+		}
 		}
 	}
 	
