@@ -11,10 +11,10 @@ global {
 	
 	
 	//define the path to the dataset folder
-	string dataset_path <- "../../includes/city_environment/";
-	
+	string dataset_path <- "../../includes/auriol/";
+
 	//define the bounds of the studied area
-	file data_file <-shape_file(dataset_path + "Iris_LaCiotat.shp");
+	file data_file <-shape_file(dataset_path + "zone.shp");
 	
 	string boundary_name_field <-"NOM_COM_M";  //"nom_comm";
 	list<string> residential_types <- ["apartments", "hotel", "Résidentiel"]; 
